@@ -1,0 +1,71 @@
+import axios from '../axios';
+import qs from 'querystring';
+var bp = 'http://10.0.7.46:8080/project/bracelet/Home';
+
+export default {
+	state:{
+		unitCloud:[],
+		unitCloud1:[],
+	},
+	getters:{
+		unitCloud:state => state.unitCloud,
+		unitCloud1:state => state.unitCloud1,
+	},
+	mutations:{
+		allUnitCloud:(state,val) => {
+//			val[1].forEach(function(item,index){
+//				item.class_status == 1 ? item.class_status = '启用' : item.class_status = '停用';
+//			});
+			state.unitCloud = val[0];
+			state.unitCloud1 = val[1];
+		}
+	},
+	actions:{
+		saveUnitClouds:(context,form) => {
+			return new Promise((resolve,reject)=>{
+			//add:
+				if(form.class_id==undefined){//如果id不存在，执行添加。
+					axios.post(bp+'/clouds/add_unit',qs.stringify(form)).then((result)=>{
+						context.dispatch('findAllUnitClouds');//刷新。
+						resolve(result);
+					}).catch((error)=>{
+						reject(error);
+					});
+			//update:
+				}else{  //否则执行修改。
+					axios.post(bp+'/manager/update_class',qs.stringify(form)).then((result)=>{
+						context.dispatch('findAllUnitClouds');//刷新。
+						resolve(result);
+					}).catch((error)=>{
+						reject(error);
+					});
+				}
+			});
+		},
+		//find:
+		findAllUnitClouds:(context) => {
+			axios.post(bp+'/clouds/get_unit').then(({data})=>{
+				context.commit('allUnitCloud',data);
+			});
+		},
+		//queryKeys:
+		findUnitClouds:(context,form) => {
+			axios.post(bp+'/manager/show_class',qs.stringify(form)).then(({data})=>{
+				context.commit('allUnitCloud',data);
+			});
+		},
+		//delete:
+		deleteByIdUnitClouds:(context,ids) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/clouds/delete_unit',qs.stringify(ids)).then((result)=>{
+					context.dispatch('findAllUnitClouds');//刷新。
+					resolve(result);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	}
+}
+
+

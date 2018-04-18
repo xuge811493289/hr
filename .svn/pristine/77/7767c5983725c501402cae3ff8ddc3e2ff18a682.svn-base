@@ -1,0 +1,12 @@
+//根据不同的学校进行修改：
+//var bp = 'http://11.1.1.11:8080/project/bracelet/Home';
+//var bp = 'http://sh.briup.com:8080/project/bracelet/Home';
+var bp = 'http://10.0.7.46:8080/project/bracelet/Home';
+var duration = 40;
+
+export default {
+//基础路径：
+	bp : bp,
+//一节课持续时间：
+	duration : duration,	
+}

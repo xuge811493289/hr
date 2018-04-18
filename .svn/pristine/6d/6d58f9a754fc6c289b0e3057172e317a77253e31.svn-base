@@ -1,0 +1,153 @@
+<template>
+	<div class="unitsClouds">
+		<div style="text-align:right;padding:0 0 5px 0">
+			<el-button type='info' 
+			 	style='background-color:#448db8;border:none' 
+			 	size='small'
+			 	 @click='addUnits'>新增</el-button>
+		</div>
+		<el-table :data="unitCloudTree" border max-height="400" size='mini' stripe>
+      <el-table-tree-column 
+      	fixed
+        :expandAll=false
+        file-icon="fa fa-file" 
+        folder-icon="fa fa-folder" 
+        label="单位名称" 
+        width="200">
+          <template slot-scope="scope">
+              <span>{{scope.row.name}}</span> 
+          </template>
+        </el-table-tree-column>
+      <el-table-column prop="level_name" label="级别" width='60' align='center'></el-table-column>
+      <el-table-column prop="unit_show_name" label="平台显示名称" width='180'></el-table-column>
+      <el-table-column prop="user_account" label="管理员账号" width='180'></el-table-column>
+      <el-table-column prop="user_prefix" label="单位账号前缀" width='180'></el-table-column>
+      <el-table-column prop="unit_status" label="状态" width='60' align='center'></el-table-column>
+      <el-table-column fixed="right" label="操作" width='120' align='center'>
+        <template slot-scope="scope">
+        	<i class="options fa fa-plus" @click="handleSave(scope.$index, scope.row)"></i>
+        	<i class="options fa fa-edit" @click="handleEdit(scope.$index, scope.row)"></i>
+        	<i class="options fa fa-trash" @click="handleDelete(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+	</div>
+</template>
+<script>
+
+import {mapActions,mapGetters} from 'vuex';
+export default {
+  name: 'App',
+  data(){
+    return {
+      visible2:false,
+      level:{},
+      form2:{},
+      title2:'云平台单位设置',
+      fw:'130px',
+      li_head://表头：
+      `<li class="head">
+        <a>
+          <div class="divTd" style="width:17%">单位名称</div>
+          <div class="divTd" style="width:14%">级别</div>
+          <div class="divTd" style="width:17%">平台显示名称</div>
+          <div class="divTd" style="width:18%">管理员账号</div>
+          <div class="divTd" style="width:12%">单位账号前缀</div>
+          <div class="divTd" style="width:12%">状态</div>
+          <div class="divTd" style="width:10%">操作</div>
+        </a>
+      </li>`,
+      rules:{//表单非空验证:
+        name:[
+          {required:true,message:'请输入单位名称',trigger: 'blur'},
+        ],
+        level_id:[
+          {required:true,message:'请选择单位级别',trigger: 'change'},
+        ],
+        user_account:[
+          {required:true,message:'请输入正确格式的管理员帐号(不能输入汉字)',validator: this.CheckTel,trigger:'blur'},
+        ],
+        user_passwd:[
+          {required:true,message:'请输入正确格式的管理员密码(不能输入汉字)',validator: this.CheckTel,trigger:'blur'},
+        ],
+        user_prefix:[
+          {required:true,message:'请输入正确格式的单位账号前缀(不能输入汉字)',validator: this.CheckTel,trigger:'blur'},
+        ],
+        unit_status:[
+          {required:true,message:'请选择启用状态',trigger: 'change'},
+        ],
+      }, 
+      // 新增弹框中的树数据
+      defaultProps: {
+        children: 'children',
+        label: 'name'
+      },
+      unitCloudTreeData:[],
+      UnitName:''
+    }
+  },
+  created(){
+  	this.findAllUnitClouds();
+  },
+  computed:{
+    ...mapGetters([
+    	'unitCloud',
+    	'unitCloudUpper',
+    	'unitCloudLevel',
+    	'unitCloudTree'
+    ]),
+  },
+  methods:{
+  //不能为汉字：
+    CheckTel(rule, value, callback){
+      console.log(value);
+      console.log(new RegExp("^[0-9a-zA-Z]*$", "").test(value));
+      if(!value){
+          callback(new Error('必须输入用户名'))
+      }else{
+        var inputValue=new RegExp("^[0-9a-zA-Z]*$", "").test(value);
+        if (!inputValue) {
+        //匹配失败，报错
+          callback(new Error('必须输入数字'));
+        }else{
+          callback();
+        }
+      }
+    },
+  //刷新：
+    freshen(){
+      var vm = this;
+      setTimeout(function(){
+        vm.$router.push('/blank/loading');//加载页
+        setTimeout(function(){
+          vm.$router.push('/settings/unitsClouds');
+        },300);
+      },1);
+    },
+    handleEdit(row,index){
+      console.log(row,index);
+    },
+    addUnits(){
+    },
+    ...mapActions([
+    	'findAllUnitCloudsAsync',
+    	'findAllUnitClouds',
+    	'saveUnitClouds',
+    	'deleteByIdUnitClouds',
+    	'findUnitClouds'
+    ]),
+  }
+}
+</script>
+<style scoped>
+.unitsClouds .el-table .cell{
+  text-align: left;
+}
+.unitsClouds .el-table .el-table__body .fa {
+	color: #448db8;
+}
+.unitsClouds i.options{
+	padding: 0 5px;
+	cursor: pointer;
+}
+</style>

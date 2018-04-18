@@ -1,0 +1,219 @@
+<!-- 班级数据报表 -->
+<template>
+	<div class="report">
+		<el-row>
+	    <el-form inline :data="form" class="form demo-form-inline" size='mini'>
+		  	<el-col :span='8'>
+          <el-form-item>
+            <el-col :span="11">
+              <el-date-picker type="date" placeholder="选择开始日期" v-model="form.class_start" style="width:100%;"></el-date-picker>
+            </el-col>
+            <el-col :span="2">
+              <el-row type='flex' justify='center'>-</el-row>
+            </el-col>
+            <el-col :span="11">
+              <el-date-picker type="date" placeholder="选择结束日期" v-model="form.class_end" style="width: 100%;" @change="dataDisable"></el-date-picker>
+            </el-col>
+          </el-form-item>
+        </el-col>
+        <el-col :span='4'>
+          <el-form-item label="" :inline="true">
+            <el-select v-model="form.course_type_id" placeholder="请选择当前课程">
+              <el-option v-for="item in courseData" :label="item.course_type_name" :value="item.course_type_id" :key="item.course_type_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span='4'>
+          <el-form-item label="" :inline="true">
+            <el-select v-model="form.grade_id" placeholder="请选择年级" @change='gradeChangeData(form.grade_id)'>
+              <el-option v-for="item in gradeData" :label="item.grade_name" :value="item.grade_id" :key="item.grade_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span='4'>
+          <el-form-item label="" :inline="true">
+            <el-select v-model="form.class_id" placeholder="请选择班级">
+              <el-option v-for="item in clazzData" :label="item.class_name" :value="item.class_id" :key="item.class_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+		   	</el-col>
+	      <el-col :span='2.5'>
+          <el-form-item>
+            <el-button type='info' size='small' :inline="true" @click='search' class='serach' :disabled="bool"><!-- <i class="fa fa-search"></i> -->&nbsp;查询</el-button>
+          </el-form-item>
+        </el-col>
+        <el-col :span='2'>
+          <el-form-item>
+             <el-button type="info" size='small' class='download' @click='downloadData'><!-- <i class="fa fa-arrow-circle-down"></i> -->下载</el-button>
+          </el-form-item>
+        </el-col>
+      </el-form>
+	  </el-row>
+    <el-row>
+  	  <el-col :span='24' style='display:none;'>
+        <form :action="downloadDataUrl" method='post' >
+          <input type="text" name='class_start' v-model="form.class_start">
+          <input type="text" name='class_end' v-model="form.class_end">
+          <input type="text" name='course_type_id' v-model="form.course_type_id">
+          <input type="text" name='grade_id' v-model="form.grade_id">
+          <input type="text" name='class_id' v-model="form.class_id">
+          <input type="text" name='dowload_classReport' value='1'>
+          <input type="submit" id='submitDownloadData' value=''>
+        </form>
+    	<!-- 	
+        <el-row type='flex' justify='end'>
+          <el-button type="info" size='mini' class='download' @click='downloadData'><i class="fa fa-arrow-circle-down"></i>下载</el-button>
+        </el-row> 
+        -->
+    	</el-col>
+    </el-row>
+    <el-table :data="tableData" :header-row-style="rowClass" border class='table' size='small'>
+      <el-table-column prop="grade_name" label="年级" width="90" fixed="left" header-align="center"></el-table-column>
+      <el-table-column fixed prop="class_name" label="班级" width='90' header-align='center'></el-table-column>
+	    <el-table-column prop="class_time" label="上课时间"  width="200" fixed='left' header-align='center'></el-table-column>
+	    <el-table-column prop="teach_name" label="任课老师" width='90' fixed='left' header-align='center'></el-table-column>
+      <el-table-column prop="stu_num" label="上课人数" width='90' fixed='left' header-align='center'></el-table-column>
+	    <el-table-column prop="min" label="班级最低心率" width='120' header-align='center'></el-table-column>
+	    <el-table-column prop="avg" label="班级平均心率" width='120' header-align='center'></el-table-column>
+	    <el-table-column prop="max" label="班级最高心率" width='120' header-align='center'></el-table-column>
+      <el-table-column prop="first_num" label="阶段一心率人数" width='120' header-align='center'></el-table-column>
+      <el-table-column prop="second_num" label="阶段二心率人数" width='120' header-align='center'></el-table-column>
+      <el-table-column prop="third_num" label="阶段三心率人数" width='120' header-align='center'></el-table-column>
+	    <el-table-column prop="near_min_num" label="接近最低心率人数" width='120' header-align='center'></el-table-column>
+	    <el-table-column prop="near_max_num" label="接近最高心率人数" width='120' header-align='center'></el-table-column>
+	    <el-table-column prop="min_num" label="超过最低心率人数" width='120' header-align='center'></el-table-column>
+	    <el-table-column prop="max_num" label="超过最高心率人数" width='120' header-align='center'></el-table-column>
+	    <el-table-column prop="course_type_name" label="课程" fixed='right' width='100' header-align='center'></el-table-column>
+		</el-table>
+    <div class="block page" :hidden='hideData'>
+      <el-pagination @current-change="currentChangeData"
+        layout="prev, pager, next"
+        :total="pagesData">
+      </el-pagination>
+    </div>
+	</div>
+</template>
+
+<script type="text/javascript">
+import {mapActions,mapGetters} from 'vuex';
+import cg from '../../store/configure.js';
+var bp = cg.bp; 
+var token = sessionStorage.getItem('token');
+
+export default {
+  name: 'report',
+  data () {
+    return {
+      downloadDataUrl:bp+'/Report/show_classReport?token='+token,
+    	form:{
+        class_start:'',
+        class_end:'',
+        course_type_id:'',
+        grade_id:'',
+        class_id:''
+      },
+      bool:false
+    }
+  },
+  created(){
+    this.findAllData();
+    this.reqTableData().then((result)=>{
+      this.pagesTotal = (+this.pageData)*10;
+    });
+  },
+  mounted(){
+    
+  },
+  computed:{
+    ...mapGetters(['clazzData','pagesData','gradeData','courseData','tableData','hideData']),
+    getTime(){
+      
+    }
+  },
+  methods:{
+    // 时间校验
+    dataDisable(){
+      if(this.form.class_start>this.form.class_end && this.form.class_start){
+        this.$notify({
+          type: 'waring',
+          message: '请选择大于开始日期的时间'
+        });
+        this.bool = true;
+      }else{
+        this.bool = false;
+      }
+    },
+    currentChangeData(val){
+      this.form.page = val;
+      this.queryData(this.form).then((result)=>{
+        
+      }).catch((error)=>{
+        console.log('班级报表分页操作失败，后台报错！'+error);
+      });
+    },
+  	gradeChangeData(gid){
+    //  this.form.class_id='';//不能写。班级选不上。
+      this.reqClazzData({grade_id:gid}).then().catch((error)=>{
+        console.log('班级报表选择年级获取班级操作失败，后台报错！'+error);
+      });
+  	},
+    rowClass(row,index) {
+      return {"background-color":"#E6EBF5",'color':'#878D99'}
+    },
+    downloadData(){
+      $('#submitDownloadData').trigger('click');
+    },
+    search(){
+      this.reqTableData(this.form).then((result)=>{
+        this.pagesTotal = (+this.pageData)*10;
+      }).catch((error)=>{
+        this.$notify.error({
+          title:'错误',
+          message:'查询班级数据报表失败'
+        });
+      });
+    },
+    ...mapActions(['findAllData','reqClazzData','reqTableData','queryData','downloadClassReport']),
+  },
+}
+</script>
+
+<style scoped>
+ .el-col {
+    height: 32px;
+  }
+	*{
+	 font-size:12px;
+	}
+  .report{
+    position: relative;
+    /*margin-top: 8px;*/
+  }
+	/*.title{
+		font-size:20px;
+	}*/
+	.table{
+    position: absolute;
+    left: 0px;
+    right: 0px;
+		font-size: 12px;
+     margin-top: 5px;
+	}
+	.serach{
+    border:none;
+    /*margin-top: -5px;*/
+    background:#448db8; 
+		font-size: 12px;
+	}
+  .download{
+    border:none;
+    background:#448db8; 
+	  margin-bottom:8px;
+	  font-size: 12px;
+  }
+</style>
+
+<!--  -->

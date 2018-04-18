@@ -1,0 +1,45 @@
+<template>
+<div class="rootContent">
+  <!-- 根路由 -->
+  <router-view></router-view>
+</div>
+</template>
+
+<script>
+import path from 'path';
+//为心率曲线设置标志，避免重复的曲线：
+localStorage.setItem('F1','0');
+localStorage.setItem('F2','0');
+/*//应对用户突然关闭网页并复制地址打开另一个网页的情况：
+setInterval(function(){
+//获取当前毫秒数，存入本地：
+	let time = parseInt(new Date().getTime()/1000);
+	localStorage.removeItem('currentTime');
+	localStorage.setItem('currentTime',time);
+},1000);*/
+
+export default {
+	name:'app',
+	created(){
+	/*//获取本地时间：
+		let time2 = parseInt(new Date().getTime()/1000);
+	//获取本地存储的时间：
+		let time3 = +localStorage.getItem('currentTime');*/
+		let token = localStorage.getItem('token');
+		/*if(time2<time3+3){//未关闭页面。（应对用户突然关闭网页并复制地址打开另一个网页的情况）*/
+			if(token){//如果token存在，单纯刷新页面
+				this.$router.push('/');
+			}else{//如果token不存在，去登录页面
+				this.$router.push('/login');  //先去登录页。
+			}
+		/*}else{//关闭了页面。
+			this.$router.push('/login');  //先去登录页。
+		}*/
+	}
+}
+
+</script>
+
+<style scoped>
+ 
+</style>

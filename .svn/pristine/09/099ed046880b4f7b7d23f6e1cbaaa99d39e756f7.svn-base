@@ -1,0 +1,150 @@
+<template>
+<div class="Login" >
+  <div class="left">
+    <img :src="img1" alt="">
+  </div>
+  <div class="right">
+    <p class="title">中赤智能手环云平台</p>
+    <div class="content">
+      <el-form :model="loginForm" :rules='rules' class='demo-ruleForm form' ref='loginForm'>
+        <el-form-item label="用户名：" prop='user' :label-width="fw">
+          <el-input v-model="loginForm.user"></el-input>
+        </el-form-item>
+        <el-form-item label="密码：" prop='passwd' :label-width="fw">
+          <el-input v-model="loginForm.passwd"></el-input>
+        </el-form-item>
+      </el-form>
+      <el-button type='info' id='submit' :disabled='bool' @click="login('loginForm')">登录</el-button>
+      <div id='find'><el-button type='text'>找回密码</el-button></div>
+    </div>
+  </div>
+  <div class="clear"></div>
+</div>	
+</template>
+
+<script>
+import path from 'path';
+import $ from 'jquery';
+import logo from '@/assets/logo.png';
+import localS from '@/store/localStorage';
+localS.local();  //执行本地存储。
+let Base64 = require('js-base64').Base64;//导入加密算法
+let flag = 0;
+let url = 'http://10.0.7.45/bracelet/index.php/Home/Login/Index';
+
+export default {  //必须暴露，否则警告。
+	name : 'Login',
+	data(){
+		return {
+      fw:'80px',
+			img1:logo,
+			loginForm:{},
+      bool:false,
+      rules:{
+        user:[
+          {required:true,message:'请输入用户名',trigger: 'blur'},
+        ],
+        passwd:[
+          {required:true,message:'请输入密码',trigger: 'blur'},
+        ],
+      },
+		}
+	},
+	created(){
+	
+	},
+	methods:{
+		login(formName){
+      this.bool = true;
+    //直接登录：
+      localStorage.setItem('token','123');
+      this.$router.push('/');
+    //权限登录：(真实登录要放开)
+    /*  this.$refs[formName].validate((valid) => {
+        if (valid) {
+  				var data = this.loginForm.user+'&'+this.loginForm.passwd;
+  			  data = Base64.encode(data);//加密。
+  			  var vm = this;
+  			  $.post(url,{user_name:data},function(result){
+  		      if(result.code == 200){
+  		        localStorage.removeItem('token');//清空token
+  		        localStorage.setItem('token',result.token);
+  		      //跳转到主页home：
+  		        vm.$router.push('/');
+  		      }else if(result.code == 350){
+  		      	vm.$alert('非法用户登录，token被窃取，登录失败！', '消息提示', {
+  		          confirmButtonText: '确定',
+  		        });
+              vm.bool = false;
+  		      }else if(result.code == 400){
+  		      	vm.$alert(result.code_error, '消息提示', {
+  		          confirmButtonText: '确定',
+  		        });
+              vm.bool = false;
+  		      }
+		      },'json');
+		    } else {
+          console.log('error submit!!');
+          this.bool = false; //如果用户输入为空，也要解禁。
+          return false;
+        }
+      }); */
+		},
+	},
+}
+</script>
+
+<style type="text/css" scoped>
+  .Login{
+  	width:100%;
+  	height:656px;
+  	background:url(../assets/2.jpg) no-repeat;
+  	background-size:cover;
+  }
+  .clear{
+    clear:both;
+  }
+  .left{
+    float:left;
+    margin-top:220px;
+    margin-left:160px;
+  }
+  .right{
+    float:right;
+    margin-top:120px;
+    margin-right:160px;
+    width:500px;
+    height:400px;
+    box-shadow:6px 6px 10px #5A5E66; 
+    border-radius:10px;
+    background:url(../assets/3.jpg);
+  }
+  .right .title{
+    font-size: 20px;
+    font-weight: bolder;
+    text-align: center;
+    margin-top:35px;
+  }
+  .right .content{
+    width: 390px;
+    height: 250px;
+    margin: 20px 55px;
+    text-align:center;
+    border-radius:10px;
+    box-shadow:6px 6px 10px #5A5E66;
+    background:#f1e18e;
+  }
+  .right .content .form{
+    padding:30px 10% 0;
+  }
+  #submit{
+    width:80%;
+  } 
+  #find{
+    width:90%;
+    text-align:right;
+  }
+  #find .el-button:hover{
+    text-decoration:underline;
+  }
+</style>

@@ -1,0 +1,305 @@
+<template>
+	<el-row class="unit" >
+  	<el-col :span="12">
+      <el-form size='mini' :data='unit' class="tab">
+        <el-row style='display:none;'>
+          <el-col :span="8">单位id：</el-col>
+          <el-col :span="16">
+            <el-form-item>
+              <el-input v-model='unit.unit_id'></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row> 
+        <el-row style='display:none;'>
+          <el-col :span="8">学校id：</el-col>
+          <el-col :span="16">
+            <el-form-item>
+              <el-input v-model='unit.school_id'></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row> 
+        <el-row>
+          <el-col :span="8">学校名称：</el-col>
+          <el-col :span="16">
+            <el-form-item>
+              <el-input v-model='unit.school_name'></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+  			<el-row>
+  			  <el-col :span="8">学校地址：</el-col>
+  			  <el-col :span="16">
+            <el-form-item>
+              <el-input v-model='unit.school_address'></el-input>
+            </el-form-item>
+          </el-col>
+  			</el-row>
+  			<el-row>
+  			  <el-col :span="8">联系电话：</el-col>
+  			  <el-col :span="16">
+            <el-form-item>
+              <el-input v-model='unit.school_tel'></el-input>
+            </el-form-item>
+          </el-col>		
+  			</el-row>
+  			<el-row>
+  			  <el-col :span="8">学校类型：</el-col>
+  			  <el-col :span="16">
+            <el-form-item>
+              <el-input v-model='unit.school_type'></el-input>
+            </el-form-item>
+          </el-col>
+  			</el-row>
+  			<el-row>
+  			  <el-col :span="8">当前学年：</el-col>
+  			  <el-col :span="16">
+            <el-form-item>
+              <el-select v-model="unit.school_year" placeholder="请选择学年">
+                <el-option v-for='item in schoolYear' :label="item.school_year" :value="item.school_year" :key="item.school_year"></el-option>
+              </el-select>
+            </el-form-item>
+  			  </el-col>
+  			</el-row>
+  			<el-row>
+  			  <el-col :span="8">当前学期：</el-col>
+  			  <el-col :span="16">
+            <el-form-item>
+              <el-select v-model="unit.school_term" placeholder="请选择学期">
+                <el-option v-for='item in schoolTerm' :label="item.school_term" :value="item.school_term" :key="item.school_term"></el-option>
+              </el-select>
+            </el-form-item>
+  			  </el-col>
+  			</el-row>
+      </el-form>
+      <el-row type='flex' justify='center'>
+        <el-button type='info' class='emit edit' size='small' @click='editUnit'><i class="fa fa-pencil"></i>&nbsp;修改</el-button>
+      </el-row>
+		</el-col>
+		<el-col :span="12">
+      <el-row type='flex' justify='center'>
+        <el-col :span='16'>
+          <el-row>
+            <el-col :span='24'>
+              <div class="logo">
+              	<img :src="school_logo" alt="" id='logoUnit' width='100%' height='auto'>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span='24'>
+              <el-form size='mini'>
+                <el-row>
+                  <el-col :span='24'>
+                    <el-form-item>
+                      <form action="http://10.0.7.46:8080/project/bracelet/Home/manager/upload_logo_unit" method="post" enctype="multipart/form-data" target='iframe_display' style='position:relative;z-index:1; width:100%;opacity:0;'>
+                        <iframe name="iframe_display" style="display:none;"></iframe>
+                        <input type="file" id='fileUnit' name="logo" style='position:absolute;top:0;left:0;width:100%;height:34px;' value='' @change='changeFileUnit'/>
+                        <input type="submit" id='submit' value="" style='position:absolute;top:36px;left:120%;height:10px;'/>
+                      </form>
+                      <el-input v-model="filename" placeholder="请选择图片" style='width:100%;'></el-input>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row type='flex' justify='center'>
+                  <el-form-item>
+                    <el-button type="info" @click='logo_up' style='width:100%;' size='small' class="adds"><i class="el-icon-upload">&nbsp;上传</i></el-button>
+                  </el-form-item>
+                </el-row>
+              </el-form>
+            </el-col>
+          </el-row>
+        </el-col>
+			</el-row>
+		</el-col>
+	</el-row>
+</template>
+
+<script type="text/javascript">
+import {mapActions,mapGetters} from 'vuex';
+import $ from 'jquery';
+
+export default {
+  name: 'unitInfo',
+  data(){
+    return {
+    	imageUrl: '',
+    	filename: '',
+      schoolTerm:[{//当前学期。
+        school_term:'第一学期',
+      },{
+        school_term:'第二学期',
+      }],
+  	}
+  },
+  created(){
+    this.findAllUnit();
+  },
+  computed:{
+    ...mapGetters(['unit','schoolYear','school_logo']),
+  },
+  methods:{
+  //当选择文件时：
+    changeFileUnit(){
+      this.filename = '';//清空，避免累加。
+      var file = $('#fileUnit')[0].files[0];//获取被选中的图片的files[0]对象。
+      this.filename = this.getPath(file);//将图片的files[0]对象转化为可用路径。
+      console.log(this.filename);
+      $('#logoUnit')[0].src = this.filename;
+    },
+  //上传：
+    logo_up(){
+      if(this.filename != ''){
+        $('#submit').trigger('click');
+      //名为友情提示，确认换系统logo，但实际上有极大的功能作用：阻短系统进程，为提交logo到后台服务器争取时间。（如果没有，换取的logo不是最新的，而是上一次的，因为上传需要时间，立即刷新拿的就是以前的，原生的alert也可以，但ele中的this.$alert却不行）
+        this.$confirm('此操作将更改系统logo, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.$notify({
+            title:'成功',
+            type: 'success',
+            message: 'logo已上传成功，系统logo将马上为您切换！'
+          });
+          this.findAllUnit();//刷新，获取新的系统logo
+        }).catch(() => {
+          this.$notify({
+            type: 'info',
+            message: '已取消更改！'
+          });          
+        });
+        /*this.$alert('logo已上传成功，系统logo将马上为您切换！', '友情提示', {
+          confirmButtonText: '确定',
+          callback: action => {
+            this.$message({
+              type: 'success',
+              message: `系统logo已为您切换！`
+            });
+          }
+        });
+        this.findAllUnit();*/
+        this.filename = '';//提交后清空。
+      }else{
+        this.$notify({
+          message: '请先选择logo图片！',
+          type: 'warning',
+        });
+      }
+    },
+    editUnit(){
+      this.$confirm('单位信息极其重要，请慎重修改，确定要修改吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        this.saveUnit(this.unit).then((result)=>{
+          if(result.data.code == 200){
+            this.$notify({
+              title:'成功',
+              type: 'success',
+              message: '单位信息设置成功',
+            });
+          }else{
+            console.log('单位信息设置失败，后台返回状态码：'+result.data.code);
+          }
+        }).catch((error)=>{
+          console.log('单位信息设置失败，后台报错！-->'+error);
+        });
+      }).catch(() => {
+        this.$notify({
+          type: 'info',
+          message: '已取消设置',
+        });          
+      });
+    },
+    getPath(file){ //获取有用的图片路径（安全机制不让input.value直接获取到）
+      if (file){  
+        var url = null;
+        if (window.createObjcectURL != undefined) {
+            url = window.createOjcectURL(file);
+        } else if (window.URL != undefined) {
+            url = window.URL.createObjectURL(file);
+        } else if (window.webkitURL != undefined) {
+            url = window.webkitURL.createObjectURL(file);
+        }
+        return url;
+      }    
+    }, 
+    /*  //logo
+    handleAvatarSuccess(res, file) {
+      this.imageUrl = URL.createObjectURL(file.raw);
+    },
+    beforeAvatarUpload(file) {
+      const isJPG = file.type === 'image/jpeg';
+      const isPNG = file.type === 'image/png';
+      const isLt2M = file.size / 1024 / 1024 < 2;
+
+      if (!isJPG&&!isPNG) {
+        this.$message.error('上传头像图片只能是 JPG,PNG格式!');
+      }
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!');
+      }
+      return isJPG||isPNG && isLt2M;
+    },*/   
+    ...mapActions(['findAllUnit','saveUnit']),
+  },
+}
+</script>
+
+<style type="text/css" scoped>
+  *{
+    font-size:14px;
+  }
+	.unit{
+    /*width:100%;
+    height:450px;*/
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    padding: 10px;
+    margin-top: -2px;
+    /*border:1px solid #ccc;*/
+  }
+  .tab .el-row {
+      border:1px solid #e4e7ed;
+    /*border-bottom:0px solid ##e4e7ed;    */
+  }
+  .tab .el-row:not(:nth-child(8)){/*最后一个*/
+    border-bottom:none;    
+  }
+  .tab .el-row .el-col {
+    text-align: center;
+    line-height:40px;
+  }
+  .tab .el-row .el-col:first-child{
+    border-right:1px solid #e4e7ed;
+  }
+  .tab .el-row .el-form-item{
+    margin:4px auto;
+  }
+  .tab .el-row .el-input,.tab .el-row .el-select{
+    width:80%;
+  }
+  .logo{
+    width:100%;
+  	height:200px;
+    overflow-y: scroll;
+  	border:1px solid #e4e7ed;
+    text-align:center;
+    margin-bottom: 8px;
+  }
+  .emit{
+  	margin-top: 10px;
+  }
+  /*logo*/
+  .adds{
+    background: #448db8;
+    border:none;
+  }
+  .edit{
+    background: #448db8;
+    border:none;
+    margin-top:20px;
+  }
+</style>

@@ -1,0 +1,84 @@
+<template>
+  <div class="remark">
+    <el-row class='row2'>
+      <el-row>
+        <el-col :span='20' align='center'><span class='title'>备注上课内容</span></el-col>
+      </el-row>
+      <el-row type='flex' justify='end'>
+        <el-button type="info" size='mini' class='download' @click='download'><i class="fa fa-arrow-circle-down"></i>下载</el-button>
+      </el-row>
+    </el-row>
+    <el-table :data="remark"  class='table2' stripe :header-row-style="rowClass" size='small' border>
+      <el-table-column prop="no" label="学号" style="width:25%"></el-table-column>
+      <el-table-column prop="name" label="学生姓名" style="width:25%"></el-table-column>
+      <el-table-column label="上课内容" style="width:25%">
+        <template slot-scope='s'>
+          <el-select v-model="s.row.content" style="width:60%">
+            <el-option label="足球" value="足球"></el-option>
+            <el-option label="篮球" value="篮球"></el-option>
+            <el-option label="羽毛球" value="羽毛球"></el-option>
+          </el-select>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
+</template>
+
+<script>
+
+export default {
+  name: 'remark',
+  data(){
+    return {
+     remark: [{
+        no: '20170101',
+        name: '张三',
+        content: '羽毛球'
+      }, {
+        no: '20170101',
+        name: '张三',
+        content: '篮球'
+      }, {
+        no: '20170101',
+        name: '张三',
+        content: '足球'
+      }],
+    }
+  },
+  methods:{
+    download(){
+      this.$message({
+        message: '保存成功！',
+        type: 'success',
+      });
+    },
+    rowClass(row, index) {
+      return {"background-color":"#E6EBF5",'color':'#878D99'}
+    },
+  },
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+  *{
+    font-size:12px;
+  }
+  .row2{
+    margin-top:20px;
+  }
+  .table2{
+    overflow:auto;
+  }
+  .title{  /* 表头的样式的设置 */
+    display:inline-block;
+    margin-top:6px;
+    font-size:20px;
+    margin-left: 100px;
+  }
+  .download{
+    margin-bottom:6px;
+    border:none;
+    background: #67C23A;
+  }
+</style>

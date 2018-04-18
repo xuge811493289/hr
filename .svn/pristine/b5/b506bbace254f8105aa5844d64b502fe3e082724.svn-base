@@ -1,0 +1,54 @@
+//数据存储实现：--存档。支持firefox2+，IE5+，chrome3+，其他不详。
+function local(){
+  if (!('localStorage' in window)) {
+    window.localStorage = (function() {
+      var documentElement, isIE = !!document.all;
+      if (isIE) {
+        documentElement = document.documentElement;
+        documentElement.addBehavior('#default#userdata');
+      }
+      return {
+        setItem: function(key, value) {
+          if (isIE) {
+            documentElement.setAttribute('value', value);
+            documentElement.save(key);
+          }else {
+            window.globalStorage[location.hostname][key] = value;
+          }
+        },
+        getItem: function(key) {
+          if (isIE){
+            documentElement.load(key);
+            return documentElement.getAttribute('value');
+          }
+          return window.globalStorage[location.hostname][key];
+        },
+        removeItem: function(key) {
+          if (isIE){
+            documentElement.removeAttribute('value');
+            documentElement.save(key);
+          }else {
+            window.globalStorage[location.hostname].removeItem(key);
+          }
+        }
+      };
+    })();
+  }
+}
+
+
+export default {
+  local : local,
+}
+  
+
+/*
+  //写入
+    localStorage.setItem('name', 'tom');
+  //读取
+    var n = localStorage.getItem('name');
+    console.log(n);
+  //删除
+    //localStorage.removeItem('name');    //不注释删除的话，下面可以打印name，但是test.js中就不能打印name了。
+    console.log(n);
+*/

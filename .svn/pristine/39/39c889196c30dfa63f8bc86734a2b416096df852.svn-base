@@ -1,0 +1,109 @@
+<template>
+	<div class="unit" :data='unit'>
+    <ul>
+      <li>
+        <span>学校名称：</span>
+        <a><input type="text" v-model='unit.name'></a>
+      </li>
+      <li>
+        <span>学校地址：</span>
+        <a><input type="text" v-model='unit.address'></a>
+      </li>
+      <li>
+        <span>联系电话：</span>
+        <a><input type="text" v-model='unit.phone'></a>
+      </li>
+      <li>
+        <span>学校类型：</span>
+        <a><input type="text" v-model='unit.type'></a>
+      </li>
+      <li>
+        <span>当前学年：</span>
+        <a><select v-model='unit.year'>
+          <option value="2017-2018">2017-2018</option>
+          <option value="2016-2017">2016-2017</option>
+        </select></a>
+      </li>
+      <li>
+        <span>当前学期：</span>
+        <a><select v-model='unit.term'>
+          <option value="第一学期">第一学期</option>
+          <option value="第二学期">第二学期</option>
+        </select></a>
+      </li>
+    </ul>
+    <el-button type='info' size='small' class='emit'>修改</el-button>
+    <div class="logo">
+      <div class="content">
+        <img src="" alt="" width='120px' height='120px'>
+        <input type="text" >
+      </div>
+    </div>
+	</div>
+</template>
+
+<script type="text/javascript">
+export default {
+  name: 'unitInfo',
+  data(){
+    return {
+      unit:{
+        name : '福山路小学',
+        address : '上海市浦东新区福山路1号',
+        phone : '021-123456789',
+        type : '九年一贯制',
+        year : '2016-2017',
+        term : '第二学期',
+      },
+  	}
+  },
+  methods:{
+    
+  },
+}
+</script>
+
+<style type="text/css" scoped>
+	.unit{
+    width:1000px;
+    height:300px;
+    border:1px solid black;
+  }
+  .unit ul{
+    list-style:none;
+    width:560px;
+    float:left;
+  }
+  .unit ul li{
+    border:1px solid black;
+  }
+  .unit ul li span{
+    display:inline-block;
+    width:180px;
+    text-align:right;
+  }
+  .unit ul li a{
+    display:inline-block;
+    width:366px;
+  }
+  .unit ul li a input{
+    width:100%;
+  }
+  .unit ul li a select{
+    width:120px;
+  }
+  .unit .emit{
+    position:absolute;
+    width:80px;
+    font-size:18px;
+    left:26%;
+    top:280px;
+  }
+  .logo{
+    border:1px solid red;
+    float:right;
+    height:300px;
+    margin-right:70px;
+  }
+  
+</style>

@@ -1,0 +1,538 @@
+<!-- 学生用户 -->
+<template>
+	<div class="student">
+		<el-row class='rowTop'>
+			<el-col :span='16'>
+				<el-form inline :model='stu' size='mini'>
+          <el-row>
+            <el-col :span='6'>
+              <el-form-item>
+                <el-select v-model="stu.grade_id" placeholder="请选择年级" @change='gradeClass(stu.grade_id)'>
+                  <el-option v-for="item in gradeStudent" :label="item.grade_name" :value="item.grade_id" :key="item.grade_id">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span='6'>
+              <el-form-item>
+                <el-select v-model="stu.class_id" placeholder="请选择班级">
+                  <el-option v-for="item in classStudent" :label="item.class_name" :value="item.class_id" :key="item.class_id">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span='6'>
+              <el-form-item>
+                <el-input v-model='stu.keys' placeholder='请输入关键字'></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span='6'>
+              <el-form-item>
+                <el-button type='info' size='small' @click='query' class="search"><i class="fa fa-search"></i>&nbsp;查询</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+				</el-form>
+			</el-col>
+			<el-col :span='8'>
+				<el-row type='flex' justify='end'>
+          <form :action="downloadStuUrl" method='post' style='display:none;'>
+            <input type="text" name='grade_id' v-model="stu.grade_id">
+            <input type="text" name='class_id' v-model="stu.class_id">
+            <input type="text" name='keys' v-model="stu.keys">
+            <input type="text" name='dowload_stuInfo' value='1'>
+            <input type="submit" id='submitDownload' value=''>
+          </form>
+          <el-form inline size='mini'>
+            <el-col :span='8'>
+              <el-form-item class='but'>
+                <el-button type='info' size='small' @click='downloadStu' class="download"><!-- <i class="fa fa-arrow-circle-down"></i> -->下载名单</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span='8'>
+              <el-form-item class='but'>
+                <el-button type='info' size='small' @click='single3' class="add"><!-- <i class="fa fa-plus"></i> -->新增学生</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span='8'>
+              <el-form-item class='but'>
+                <el-button type='info' size='small' @click='batch3' class="adds"><!-- <i class="fa fa-plus-circle"></i> -->批量导入</el-button>
+              </el-form-item>
+            </el-col>
+          </el-form>
+				</el-row>
+			</el-col>
+		</el-row>
+    <el-table :data="student" style="width:100%" class='table' border stripe :header-row-style="rowClass" size='mini' align='center'>
+      <el-table-column type="index" label="序号" fixed align='center'></el-table-column>
+      <el-table-column prop="stu_id" label="id" fixed v-if='false' align='center'></el-table-column>
+      <el-table-column prop="class_grade" label="班级" fixed align='center'></el-table-column>
+      <el-table-column prop="stu_account" label="帐号" fixed align='center'></el-table-column>
+      <el-table-column prop="stu_name" label="姓名" fixed align='center'></el-table-column>
+      <el-table-column prop="stu_number" label="学号" fixed align='center'></el-table-column>
+      <el-table-column prop="stu_gender" label="性别" align='center'></el-table-column>
+      <el-table-column prop="min_heart" label="最低心率" align='center'>
+      </el-table-column>
+      <el-table-column prop="avg_heart" label="平均心率" align='center'>
+      </el-table-column>
+      <el-table-column prop="max_heart" label="最高心率" align='center'>
+      </el-table-column>
+      <el-table-column prop="first_heart" label="阶段一心率" width="100" align='center'>
+      </el-table-column>
+      <el-table-column prop="second_heart" label="阶段二心率" width="100" align='center'>
+      </el-table-column>
+      <el-table-column prop="third_heart" label="阶段三心率" width="100" align='center'>
+      </el-table-column>
+      <el-table-column prop="stu_hight" label="身高" align='center'>
+      </el-table-column>
+      <el-table-column prop="stu_weight" label="体重" align='center'>
+      </el-table-column>
+      <el-table-column label="操作" fixed='right' width="120" align='center'>
+        <template slot-scope='scope'>
+          <i class="icon el-icon-edit" @click="edit3(scope.$index, scope.row)"></i>
+	        <i class="icon el-icon-delete" @click="delete3(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div class="block" :hidden='hideStu'>
+      <el-pagination @current-change="currentChangeStu"
+        layout="prev,pager,next"
+        :total="pagesStu">
+      </el-pagination>
+    </div>
+
+    <el-dialog :visible.sync="visible3" center>
+      <div slot="title" class="dialog-title">
+        {{title3}}
+      </div>
+      <el-form :model="form3" :rules='rules' class='demo-ruleForm dialog' ref='form3' size='mini'>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="序号" :label-width="fw" prop='no'>
+              <el-input v-model="form3.no" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="帐号" :label-width="fw" prop='stu_account'>
+              <el-input v-model="form3.stu_account" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="学号" :label-width="fw" prop='stu_number'>
+              <el-input v-model="form3.stu_number" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="姓名" :label-width="fw" prop='stu_name'>
+              <el-input v-model="form3.stu_name" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="年级" :label-width="fw" prop='grade_id'>
+              <el-select v-model="form3.grade_id" placeholder="请选择年级" style='width:100%;'>
+                <el-option label="一年级" value="1"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="班级" :label-width="fw" prop='class_id'>
+              <el-select v-model="form3.class_id" placeholder="请选择班级" style='width:100%;'>
+                <el-option label="一班" value="1"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="手环编号" :label-width="fw" prop='stu_num'>
+              <el-input v-model="form3.stu_num" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="平均心率" :label-width="fw">
+              <el-input v-model="form3.avg_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="最低心率" :label-width="fw">
+              <el-input v-model="form3.min_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="最高心率" :label-width="fw">
+              <el-input v-model="form3.max_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="阶段一心率" :label-width="fw">
+              <el-input v-model="form3.first_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="阶段二心率" :label-width="fw">
+              <el-input v-model="form3.second_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="阶段三心率" :label-width="fw">
+              <el-input v-model="form3.third_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="身高" :label-width="fw">
+              <el-input v-model="form3.stu_hight" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="体重" :label-width="fw">
+              <el-input v-model="form3.stu_weight" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="性别" :label-width="fw" prop='stu_gender'>
+              <el-radio-group v-model="form3.stu_gender">
+                <el-radio label="男">男</el-radio>
+                <el-radio label="女">女</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="启用状态" :label-width="fw" prop='stu_status'>
+              <el-radio-group v-model="form3.stu_status">
+                <el-radio label="启用">启用</el-radio>
+                <el-radio label="禁用">禁用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle3" size='mini'>取 消</el-button>
+        <el-button type="info" @click="submit3('form3')" class="yes" size='mini'>确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog :visible.sync="visible3s" center>
+      <div slot="title" class="dialog-title">
+        {{title3s}}
+      </div>
+    <!--
+      <el-row>
+        <el-col :span="18" :offset="4">
+           <el-upload class="upload-demo" ref="upload" center
+            action="https://jsonplaceholder.typicode.com/posts/" :show-file-list="false" :on-preview="handlePreview" :on-remove="handleRemove" :file-list="fileList" :auto-upload="false" :on-change="handleChange">
+              <el-input style="width:420px" slot="trigger" v-model="filename" size="mini" type="info" placeholder="选取文件">选取文件</el-input>
+          </el-upload> 
+        </el-col>
+      </el-row>
+    -->
+      <el-form :model="form3s" class='dialog3' size='mini'>
+        <el-row>
+          <el-col :span='6'>
+            <el-form-item label="">
+              <el-row type='flex' justify='end'>
+                <el-button type='info' size='mini' @click='downloadModelStu' class="downloadModelStu">下载模版</el-button>
+              </el-row>
+            </el-form-item>
+          </el-col>
+          <el-col :span='18'>
+            <el-form-item label="">
+              <el-input style="width:90%" v-model="filename" placeholder="手环批量导入：文件上传"></el-input>
+              <form :action="stuUpUrl" method="post" enctype="multipart/form-data" target='iframe_display' style='position:relative; opacity:0;'>
+                <iframe name="iframe_display" style="display:none;"></iframe>   
+                <input type="file" id='file' name="excelData" style='position:absolute;top:-30px;left:0; width:90%' value='' @change='changeFileStudent' />
+                <input type="submit" id='submit' value="" style='position:absolute;top:88px;left:-166px;' />
+                <input type="text" id='g_id' name='grade_id' value="" style='position:absolute;top:88px;left:-166px;width:20px;' />
+                <input type="text" id='c_id' name='class_id' value="" style='position:absolute;top:88px;left:-136px;width:20px;' />
+              </form>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle3s" size='mini'>取 消</el-button>
+        <el-button type="info" @click="submit3s" class="adds" size='mini'>导 入</el-button>
+      </div>
+    </el-dialog> 
+	</div>
+</template>
+
+<script>
+import {mapActions,mapGetters} from 'vuex';
+import cg from '../../../store/configure.js';
+var bp = cg.bp; 
+
+export default {
+  name: 'student',
+  data(){
+    return {
+      fw:'100px',
+      filename:'',
+    	stu:{},
+      title3:'学生用户',
+      title3s:'批量导入',
+      stuUpUrl:bp+'/manager/student_up',
+      downloadStuUrl:bp+'/manager/show_student',
+      form3:{},
+      form3s:{},
+      visible3:false,
+      visible3s:false,
+      fileList:[],
+      rules:{
+        stu_account:[
+          {required:true,message:'请输入帐号',trigger: 'blur'},
+        ],
+        stu_number:[
+          {required:true,message:'请输入学号',trigger: 'blur'},
+        ],
+        stu_name:[
+          {required:true,message:'请输入姓名',trigger: 'blur'},
+        ],
+        grade_id:[
+          {required:true,message:'请选择年级',trigger: 'change'},
+        ],
+        class_id:[
+          {required:true,message:'请选择班级',trigger: 'change'},
+        ],
+        stu_num:[
+          {required:true,message:'请输入手环编号',trigger: 'blur'},
+        ],
+        stu_gender:[
+          {required:true,message:'请选择性别',trigger: 'change'},
+        ],
+        stu_status:[
+          {required:true,message:'请选择启用状态',trigger: 'change'},
+        ],
+      }, 
+    }
+  },
+  created(){
+    this.findAllStu();
+  },
+  computed:{
+    ...mapGetters(['student','gradeStudent','classStudent','pagesStu','hideStu']),
+  },
+  methods:{
+  //分页：
+    currentChangeStu(val){
+      this.stu.page = val;
+      this.findStu(this.stu).then((result)=>{
+        
+      }).catch((error)=>{
+        console.log('学生管理分页操作失败，后台报错'+error);
+      });
+    },
+    gradeClass(g_id){
+      this.findClassStudent({grade_id:g_id}).then((result)=>{}).catch((error)=>{
+        console.log('学生信息查询失败，后台报错'+error);
+      });
+    },
+    downloadModelStu(){//下载模版。
+    //跳转到下载地址：
+      window.location.href = bp+'/manager/student_download';
+    },
+    changeFileStudent(){//当用户选择文件时。
+      this.filename = $('#file').val();
+    },
+    downloadStu(){//名单下载。
+    //跳转到下载地址：
+      $('#submitDownload').trigger('click');//模拟点击隐藏表单。
+    //  window.location.href = bp+'/manager/show_student';
+    },
+    edit3(i,row){
+      this.visible3=true;
+      this.title3='学生信息修改';
+      this.form3 = row;
+    },
+    delete3(i,row){
+      this.$confirm('此操作将永久删除该条数据，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deleteByIdStu({stu_id:row.stu_id}).then((result)=>{
+          if(result.data.code == 200){
+            this.$notify({
+              title:'成功',
+              type: 'success',
+              message: '学生信息删除成功',
+            });
+          }else{
+            console.log('学生信息删除失败，后台返回状态码：'+result.data.code);
+          }
+        }).catch((error)=>{
+          console.log('学生信息删除失败，后台报错！-->'+error);
+        });
+      }).catch(() => {
+        this.$notify({
+          type: 'info',
+          message: '已取消删除'
+        });          
+      });
+    },
+    single3(){
+      this.visible3=true;
+      this.title3='单个新增学生';
+      this.form3 = {//要清空。
+        stu_gender:'女',
+        stu_status:'启用',
+      };
+    },
+    batch3(){
+      if(this.stu.grade_id == undefined || this.stu.class_id == undefined){
+        this.$notify({
+          type: 'warning',
+          message: '请先选择年级和班级！'
+        });
+      }else{
+        this.visible3s=true;
+        this.filename='';//清空输入框用户选择的文件。
+        $('#g_id').val(this.stu.grade_id);
+        $('#c_id').val(this.stu.class_id);
+      }
+    },
+    submit3(formName){
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.saveStu(this.form3).then((result)=>{
+            if(result.data.code == 200){
+              this.$notify({
+                title:'成功',
+                type: 'success',
+                message: '操作成功'
+              });
+            }else{
+              console.log('学生信息操作失败，后台返回状态码：'+result.data.code);
+            }
+          }).catch((error)=>{
+            console.log('学生信息操作失败，后台报错！-->'+error);
+          });
+          this.visible3=false;
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });  
+    },
+    submit3s(){
+    //  this.$refs.upload.submit();
+      $('#submit').trigger('click');
+      this.visible3s=false;
+    },
+    cancle3(){this.visible3=false;},
+    cancle3s(){this.visible3s=false;},
+    rowClass(row, index) {
+      return {"background-color":"#E6EBF5",'color':'#878D99'}
+    },
+    query(){
+      this.findStu(this.stu).then((result)=>{}).catch((error)=>{
+        console.log('学生信息查询失败，后台报错！-->'+error);
+      });
+    },
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handleChange(file, fileList){
+      this.filename=file.name;
+    },
+    handlePreview(file) {
+      console.log(file);
+    },
+    ...mapActions(['findAllStu','saveStu','deleteByIdStu','findStu','gradeAndClass','findClassStudent','downLoadStuTable']),
+  },
+}
+</script>
+
+<style scoped>
+  *{
+    font-size:12px;
+  }
+  .icon {
+		cursor: pointer;
+		font-size: 18px;
+	}
+  .table{
+    overflow:auto;
+  }
+  .dialog-footer{
+    text-align:right;
+  }
+  .dialog3 .el-input{
+    width:90%;
+  }
+  .rowTop .el-form .el-form-item{
+    margin-top:-3px;
+    margin-bottom:11px;
+  }
+  .rowTop .but{
+    margin-right:0;
+    margin-left:8px;
+  } 
+  .add{
+    font-size:12px;
+    background: #448db8;
+    border:none;
+  }
+  .search{
+    font-size:12px;
+    background: #448db8;
+    border:none;
+  }
+  .adds{
+    font-size:12px;
+    background: #448db8;
+    border:none;
+  }
+  .yes{
+    font-size:12px;
+    background: #448db8;
+    border:none;
+  }
+  .download{
+    font-size:12px;
+    border:none;
+    background: #448db8;
+  }
+  .downloadModelStu{
+    font-size:12px;
+    border:none;
+    background: #409EFF;
+    border-radius: 0;
+    margin-top: 2px;
+    margin-left: 3px;
+  }
+
+</style>
+<style>
+   /*模态框样式*/
+  .dialog-title {
+    background-color: #448db8;
+    height: 52px;
+    line-height: 52px;
+    font-size: 18px;
+    color: #FFF;
+  }
+  .el-dialog__headerbtn .el-dialog__close {
+    color: #FFF;
+  }
+  .el-dialog__header {
+      padding: 0;
+  }
+  .el-dialog--center .el-dialog__header {
+      padding-top: 0
+  }
+</style>

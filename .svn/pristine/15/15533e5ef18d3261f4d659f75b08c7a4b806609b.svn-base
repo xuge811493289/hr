@@ -1,0 +1,647 @@
+<!-- 班级曲线报表-->
+<template>
+  <div class="curve">
+    <el-row>
+      <el-form inline :data="form" class="form demo-form-inline" size='mini'>
+        <el-col :span='5'>
+          <el-form-item>
+            <el-date-picker type="date" placeholder="选择上课日期" v-model="class_start" style="width:100%;" @change='reportCurve1'></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span='5'>
+          <el-form-item  label="" :inline="true">
+            <el-select v-model="form.grade_id" placeholder="请选择年级" @change='gradeChange(form.grade_id)'>
+              <el-option v-for="item in gradeCurve" :label="item.grade_name" :value="item.grade_id" :key="item.grade_id">
+              </el-option>
+            </el-select> 
+          </el-form-item>
+        </el-col>
+        <el-col :span='5'>
+          <el-form-item  label="" :inline="true">
+            <el-select v-model="form.class_id" placeholder="请选择班级" @change='reportCurve'>
+              <el-option v-for="item in clazzCurve" :label="item.class_name" :value="item.class_id" :key="item.class_id">
+              </el-option>
+            </el-select> 
+          </el-form-item>
+        </el-col>
+        <el-col :span='5'>
+          <el-form-item  label="" :inline="true">
+            <el-select v-model="form.rel_time" placeholder="请选择课程" @change='reportCurve'>
+              <el-option v-for="item in clazzTimeCurve" :label="item.content" :value="item.rel_time" :key="item.rel_time">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span='2.5'>
+          <el-form-item>
+            <!-- <el-button type='primary' size="mini" :inline="true" class='serach'  @click='serach'>查询</el-button> -->
+          </el-form-item>
+        </el-col>
+      </el-form>
+    </el-row>
+    <el-row>
+      <el-col :span='19'>
+        <el-row class='top'>
+          <el-col :span='10'>
+            <el-row>
+              <el-col :span='8' class='font'>班级最高心率：{{topClass}}</el-col>
+              <el-col :span='8' class='font'>班级最低心率：{{lowClass}}</el-col>
+              <el-col :span='8' class='font'>班级平均心率：{{averageClass}}</el-col>
+            </el-row>
+          </el-col>
+          <el-col :span='3' class='font'>阶段一心率：{{firstRate}}</el-col>
+          <el-col :span='3' class='font'>阶段二心率：{{seconedRate}}</el-col>
+          <el-col :span='3' class='font'>阶段三心率：{{thiredRate}}</el-col>
+          <el-col :span='5'>
+            <el-row type='flex'>
+              <el-select v-model="form.rate" size='mini' placeholder="班级心率曲线" @change='change'>
+                <el-option label="班级心率曲线" value="班级心率曲线"></el-option>
+                <el-option label="个人心率曲线" value="个人心率曲线"></el-option>
+              </el-select>
+            </el-row>
+          </el-col>
+        </el-row>
+        <el-row class='container'>
+          <div class="two">
+          <!-- 1. 图标容器 -->
+            <div id="mainC" :style="{height: H2}"></div>
+            <div id="main2C" :style="{height: H2}"></div>
+          </div>
+        </el-row>
+      </el-col>
+      <el-col :span="5" >
+        <el-row type='flex' justify='end'>
+          <el-col :span='22'  class="fill" style="background:none">  
+            <!-- <marquee direction=left behavior=scroll style='color:#737373'>欢迎使用智能手环</marquee> -->
+          </el-col> 
+        </el-row>
+        <el-row type='flex' justify='end' id='right2'>
+          <el-col :span='22' class="right-col">
+            <el-row class="right-row">
+              <el-col :span='16'>学生列表</el-col>
+            </el-row>
+            <el-row class='stuList'>
+              <el-col :span='24'>
+                <el-row>
+                  <el-col :span='12' class='height' v-for='item in stuList' :key='item.stu_id'><b :u='item.stu_number' :v='item.stu_id'>{{item.stu_name}}</b></el-col>
+                </el-row>
+              </el-col>
+            </el-row>
+          </el-col> 
+        </el-row> 
+      </el-col>  
+    </el-row>
+  </div>
+</template>
+
+<script>
+import {mapActions,mapGetters} from 'vuex';
+//2. 导入echarts库
+let echarts = require('echarts');
+//require('echarts/lib/component/tooltip');
+//require('echarts/lib/component/title');
+import $ from 'jquery';
+import qs from 'querystring';
+
+var bool = false;
+export default {
+  name: 'curve',  
+  data(){
+    return{
+      courseTime:'',
+      formInline:'',
+      form:{
+        rate:'班级心率曲线',
+        class_start:''
+      },
+      class_start:'',
+      arrxC:[],
+      arry1C:[],
+      arry2C:[],
+      arry3C:[],
+      arrxP:[],
+      arry1P:[],
+      arry2P:[],
+      stu_id:'',
+      stu_name:'',
+      stu_number:'',
+      course_name:'',
+      star:'2',
+      subName:'',
+      averageClass:'',
+      topClass:'',
+      lowClass:'',
+      firstRate:'',
+      seconedRate:'',
+      thiredRate:'',
+      form:{
+        course_name:''
+      }
+    }
+  },
+  created(){
+    this.findAllCurve();
+    this.H = $(window).height();
+    this.H2 = this.H - 255 + 'px';
+  },
+  computed:{
+    ...mapGetters(['clazzCurve','gradeCurve','courseCurve','rateCurve','stuList','clazzTimeCurve','curvePersonR','curveClazzR']),
+  },
+  mounted(){
+    $('.two').height(this.H-60-48-103-25+'px');
+    this.move1();
+    this.move2(this,this.arrxP,this.arry1P,this.arry2P);
+    this.ifBool();
+  },
+  methods:{
+    reportCurve1(){
+      //处理开始时间：
+      var t = Date.parse(this.class_start)
+      this.form.class_start = t/1000;
+      if(this.form.class_start){
+        var s = Date.parse(this.class_start);
+          s=s/1000;
+          this.form.class_end = s + 24*60*60;//多24小时。
+          //s=s*1000
+      }
+    },
+    reportCurve(){
+       var self=this;
+       for(var i=0;i<this.clazzTimeCurve.length;i++){
+        if(this.form.rel_time == this.clazzTimeCurve[i].rel_time){
+          this.form.course_name = self.clazzTimeCurve[i].course_name;
+        }
+      }
+    //请求班级心率：
+      if(this.form.grade_id && this.form.class_id){
+        //根据年级id以及班级id查找当前年级以及班级的名称
+        //this.curvePicture('');
+        var currentClazz=this.clazzCurve.filter(function(item){
+          return item.class_id==self.form.class_id;
+        });
+        var currentGrade=this.gradeCurve.filter(function(item){
+          return item.grade_id==self.form.grade_id;
+        });
+        if(this.form.course_name == null || this.form.course_name == undefined){
+          this.form.course_name = '';
+        }
+        this.subName=currentGrade[0].grade_name+' '+currentClazz[0].class_name+' '+this.form.course_name;
+        this.curvePicture(this.subName);
+        this.reqClazzHeartCurve({class_id:this.form.class_id}).then(()=>{}).catch((error)=>{
+          this.$notify({
+            type: 'error',
+            message: '操作失败'
+          });
+        });
+      }
+   
+    //全选触发（自动触发）：
+      if(this.form.grade_id && this.form.class_id && this.form.class_start && this.form.rel_time){        
+      //阶段心率
+        this.averageClass=this.rateCurve[1];
+        this.topClass=this.rateCurve[2];
+        this.lowClass=this.rateCurve[0];
+        this.firstRate=this.rateCurve[3];
+        this.seconedRate=this.rateCurve[4];
+        this.thiredRate=this.rateCurve[5]; 
+      //清空：
+        this.curveClazzR = [];
+        this.curvePersonR = [];
+        this.arrxC = [];
+        this.arry1C = [];
+        this.arry2C = [];
+        this.arry3C = [];
+        this.arrxP = [];
+        this.arry1P = [];
+        this.arry2P = [];
+        for(var k=1;k<=40;k++){
+          this.arrxP.push(k);
+          this.arrxC.push(k);
+        }
+      //请求班级心率曲线：当全选时触发。
+        this.reqClazzCurveReport(this.form).then(()=>{
+          this.arry1C = [];
+          this.arry2C = [];
+          this.arry3C = [];
+          for(var i=0;i<40;i++){
+            this.arry1C.push(this.curveClazzR[0][i].heartrate_value);
+            this.arry2C.push(this.curveClazzR[1][i].heartrate_value);
+            this.arry3C.push(this.curveClazzR[2][i].heartrate_value);
+          }
+          var vm2=this;
+          $('.stuList .height b').click(function(){
+            $('.stuList .height b').removeAttr('class');
+            $(this).attr('class','primary');
+            vm2.stu_id = $(this).attr('v');
+            vm2.stu_name = $(this).text();
+            vm2.stu_number = $(this).attr('u');
+          //请求个人心率曲线：当全选时触发。
+            vm2.form.stu_id = vm2.stu_id
+            vm2.reqPersonCurveReport(vm2.form).then(()=>{
+              vm2.arry1P = [];
+              vm2.arry2P = [];
+              for(var i=0;i<40;i++){
+                vm2.arry1P.push(vm2.curvePersonR[0][i].heartrate_value);
+                vm2.arry2P.push(vm2.curvePersonR[1][i].heartrate_value);
+              }
+              vm2.move2(vm2,vm2.arrxP,vm2.arry1P,vm2.arry2P);
+            }).catch((error)=>{
+              // vm2.$notify({
+              //   title:'失败',
+              //   type: 'error',
+              //   message: '没找到相应数据'
+              // });
+            });
+          });
+          if($('.stuList .height b').length>0){
+            $('.stuList .height b').eq(0).attr('class','primary');
+            $('.stuList .height b').eq(0).trigger('click');
+          }
+          this.move1();
+        }).catch((error)=>{
+          this.$notify({
+            type: 'error',
+            message: '没找到相应数据'
+          });
+          this.arrxC = [];
+          this.arry1C = [];
+          this.arry2C = [];
+          this.arry3C = [];
+          this.move1();
+        });
+      }
+    },
+    change(){
+      bool = !bool;
+      this.ifBool();
+    },
+    gradeChange(gid){     
+      this.form.class_id='';
+      this.form.course_type_name='';
+      this.reqClazzCurve({grade_id:gid}).then().catch((error)=>{
+        this.$notify({
+          title:'失败',
+          type: 'error',
+          message: '操作失败'
+        });
+      });
+    },
+    ifBool(){
+      if(bool == false){
+        $('#main2C').css('display','none');
+        $('#mainC').css('display','block');
+        $('#right2').css('visibility','hidden');
+      }else{
+        $('#mainC').css('display','none');
+        $('#main2C').css('display','block');
+        $('#right2').css('visibility','visible');
+      }
+    },
+    curvePicture(subName){
+      var vm = this;
+      var colors = ['#67C23A','#EB9E05','#409EFF'];
+      var rateText = '班级心率曲线';
+      var rateSubtext = subName;
+      //+' 体育课程';
+      var myChart = echarts.init($('#mainC')[0]);
+      function time(){//获取当前时间。
+        var date = new Date();
+        date = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" &nbsp; "+repair(date.getHours())+':'+repair(date.getMinutes());
+        return date;
+      }
+      function repair(n){//时间补0函数
+        n = n + '';
+        return '00'.slice(0,2-n.length)+n;
+      }
+      curve();
+      // 绘制图表
+      function curve(){
+        var option = {
+          color: colors,
+          title:{
+            text:rateText,
+            left:'center',
+            top:'20',
+            subtext:rateSubtext,
+            subtextStyle:{
+              color:'#aaa',
+              fontWeight:'bolder',
+              align:'left',
+            },
+          },
+          tooltip: {
+            show:true,
+            trigger:'axis',
+            axisPointer:'shadow',
+            snap:'snap',
+            formatter: function(params){
+              var date = time();
+              var str = date + '<br/>' + '班级平均心率：' + params[0].value + '次/分钟<br/>' + '男生平均心率：' + params[1].value + '次/分钟<br/>' + '女生平均心率：' + params[2].value + '次/分钟';
+              return str;
+            },
+            textStyle:{//文本样式。
+              color:['white'],
+            },
+          },
+          legend: {
+            orient:'vertical',
+            data:['班级平均心率','男生平均心率','女生平均心率'],
+            x:'right',
+            top:40,
+          },
+          calculable : true,
+          grid: {  //图表的内外边距
+            top: 140,
+            bottom: 25,
+          },
+          xAxis: [{  //X轴坐标参数
+            name:'时间/分钟',
+            type: 'category',
+            boundaryGap : false, //分界线范围
+            data: vm.arrxC,
+          }],
+          yAxis: [{
+            name:'心率/次数',
+            type: 'value',
+            scale: true,
+          }],
+          series: [{
+            name:'班级平均心率',
+            type:'line',
+            data: vm.arry1C,
+            markPoint : {
+              data : [
+                {type : 'max', name: '最大值'},
+                {type : 'min', name: '最小值'}
+              ]
+            },
+            markLine : {
+              data : [
+                {type :'average', name:'平均值'}
+              ]
+            },
+          },{    
+            name:'男生平均心率',
+            type:'line',
+            data: vm.arry2C,
+            markPoint : {
+              data : [
+                {type : 'max', name: '最大值'},
+                {type : 'min', name: '最小值'}
+              ]
+            },
+            markLine : {
+              data : [
+                {type :'average', name:'平均值'}
+              ]
+            },
+          },{
+            name:'女生平均心率',
+            type:'line',
+            data: vm.arry3C,
+            markPoint : {
+              data : [
+                {type : 'max', name: '最大值'},
+                {type : 'min', name: '最小值'}
+              ]
+            },
+            markLine : {
+              data : [
+                {type :'average', name:'平均值'}
+              ]
+            },
+          }],
+        }
+        myChart.setOption(option);
+      }
+      return curve;
+    },
+    curvePicture2(){
+      var colors = ['#EB9E05','#409EFF'];
+      var myChart = echarts.init(document.getElementById('main2C'));
+      var vm = this;
+      function time(){//获取当前时间。
+        var date = new Date();
+        date = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" &nbsp; "+repair(date.getHours())+':'+repair(date.getMinutes());
+        return date;
+      }
+      function repair(n){//时间补0函数
+        n = n + '';
+        var str = '00';
+        return str.slice(0,2-n.length)+n;
+      }
+      // 绘制图表
+      function curve(vm,x,c,p){
+        if(vm.course_name == null){
+          vm.course_name = ' ';
+        }
+        var option = {
+          color: colors,
+          title:{
+            text:'个人心率曲线',
+            left:'center',
+            top:'20',
+            subtext:vm.stu_number+' '+vm.stu_name+' '+vm.course_name,
+            subtextStyle:{
+              color:'#aaa',
+              fontWeight:'bolder',
+              align:'left'
+            },
+          },
+          tooltip: {
+            show:true,
+            trigger:'axis',
+            axisPointer:'shadow',
+            snap:'snap',
+            formatter: function(params){
+              var a = "<i class='el-icon-star-off'></i> ";
+              var star = a;
+              switch(vm.star){
+                case '1':star = a;break;
+                case '2':star = a+'&nbsp; '+a;break;
+                case '3':star = a+'&nbsp; '+a+'&nbsp; '+a;break;
+                default:star = a+'&nbsp; '+a+'&nbsp; '+a+'&nbsp; '+a;
+              }
+              var date = time();
+              var str = date + '<br/>' + '班级平均心率：' + params[0].value + '次/分钟<br/>' + '个人实时心率：' + params[1].value + '次/分钟<br/>' + '心率阶段：' + star;
+              return str;
+            },
+            textStyle:{//文本样式。
+              color:['white'],
+            },
+          },
+          /*visualMap:[{
+          //  type:'piecewise',
+            inRange:{
+            //  color:['blue','#121122','red'],
+            //  symbolSize:[30,150]
+            },
+            outOfRange: {       // 选中范围外的视觉配置
+            //  symbolSize: [30,150]
+            },
+          }],*/
+          legend: {
+            orient:'vertical',
+            data:['班级平均心率','个人实时心率'],
+            x:'right',
+            top:40,
+          },
+          calculable : true,
+          grid: {  //图表的内外边距
+            top: 120,
+            bottom: 25,
+          },
+          xAxis: [{  //X轴坐标参数
+            name:'时间/分钟',
+            type: 'category',
+            boundaryGap : false, //分界线范围
+            data: x,
+          }],
+          yAxis: [{
+            name:'心率/次数',
+            type: 'value',
+            scale: true,//自适应，不从0开始
+          }],
+          series: [{
+            name:'班级平均心率',
+            type:'line',
+            data: c,
+            markPoint : {
+              data : [
+                {type : 'max', name: '最大值'},
+                {type : 'min', name: '最小值'}
+              ]
+            },
+            markLine : {
+              data : [
+                {type :'average', name:'平均值'}
+              ]
+            },
+          },{    
+            name:'个人实时心率',
+            type:'line',
+            data: p,
+            markPoint : {
+              data : [
+                {type : 'max', name: '最大值'},
+                {type : 'min', name: '最小值'}
+              ]
+            },
+            markLine : {
+              data : [
+                {type :'average', name:'平均值'}
+              ]
+            },
+          }],
+        }
+        myChart.setOption(option);
+      }
+      return curve;
+    },
+    move1(){     
+      var curve = this.curvePicture(this.subName);
+      curve();//预先执行。
+    },
+    move2(vm,x,c,p){
+      var curve = vm.curvePicture2();
+      curve(vm,x,c,p);//预先执行。
+    },
+    remark(){
+      this.$notify({
+        title:'成功',
+        message:'上课内容备注成功！',
+        type:'success',
+      });
+    },
+    ...mapActions(['findAllCurve','findCurve','reqClazzCurve','reqClazzCurveReport','reqPersonCurveReport','reqClazzHeartCurve']),
+  },
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+  .el-col {
+    height: 32px;
+  }
+  *{
+    margin:0;
+    font-size:12px;
+  }
+  /* .curve{
+    margin-top:8px;
+  } */
+  .form{
+    height:35px;
+  }
+  .top{
+    margin-top:10px;
+  }
+  .font{
+    display:inline-block;
+    height:30px;
+    line-height:30px;
+  }
+  #remark{
+    margin-top: 5px;
+  }
+  .container{
+    margin-top: 5px;
+    border-radius: 5px;
+    width:100%;
+  }
+  .container .two{
+    border: 1px solid #ccc;
+    box-shadow: 10px 10px 10px #ccc;
+  }
+  .stuList{
+    /*margin-top: 10px;*/
+    height:345px;
+    background: #f2f2f2;
+    /*border:1px solid #DFE4ED;*/
+    box-shadow:4px 4px 6px #ccc;
+    margin-bottom:20px;
+  }
+  #right2{
+    margin-top:30px;
+  }
+  .height{
+    height:30px;
+    line-height:30px;
+    text-align:center;
+  }
+  .primary{
+    background:#169bd5;
+    color:white;
+    border-radius:4px;
+    /* width:50%; */
+  }
+  .stuList .el-row .el-col{
+    cursor:pointer;
+  }
+  .stuList .el-row .el-col b{
+    display:inline-block;
+  }
+  .right-col{
+    border-radius: 5px;
+    margin-top: -19px;
+    background: #E6EBF5;
+    line-height: 25px;
+    height:385px;
+    box-shadow:4px 4px 6px #ccc;
+  }
+  .right-row{
+    margin-top: 10px;
+  }
+  .right-row .el-col{
+    margin-left: 18px;
+  }
+  .fill{
+    margin-top: 8px;
+    background: #E6EBF5;
+    height:28px;
+    line-height:30px;
+    text-align: center;
+    border-radius: 5px;
+    color: #FA5555;
+  }
+</style>

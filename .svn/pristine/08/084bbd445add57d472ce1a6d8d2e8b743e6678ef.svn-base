@@ -1,0 +1,119 @@
+import axios from 'axios';
+import qs from 'querystring';
+import moment from 'moment';
+import cg from '../configure.js';
+var bp = cg.bp;
+axios.defaults.headers.post['Content-type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
+
+export default {
+	state:{
+		gradeCurve:[],
+		clazzCurve:[],
+		courseCurve:[],
+		rateCurve:[],
+		stuList:[],
+		clazzTimeCurve:[],
+		curveClazzR:[],
+		curvePersonR:[],
+	},
+	getters:{
+		gradeCurve:state => state.gradeCurve,
+		clazzCurve:state => state.clazzCurve,
+		courseCurve:state => state.courseCurve,
+		rateCurve:state => state.rateCurve,
+		stuList:state => state.stuList,
+		clazzTimeCurve:state => state.clazzTimeCurve,
+		curveClazzR:state => state.curveClazzR,
+		curvePersonR:state => state.curvePersonR,
+	},
+	mutations:{
+		allCurve:(state,val) => {
+			state.gradeCurve = val[0];
+			state.courseCurve = val[1];
+		},
+		allClazzCurve:(state,val) => {
+			state.clazzCurve = val;
+		},
+		allRateCurve:(state,val) => {
+			state.rateCurve = val[0];
+			state.stuList = val[1];
+			state.clazzTimeCurve = val[2];
+		},
+		allClazzCurveR:(state,val) => {//班级曲线数据。
+			state.curveClazzR = val;
+		},
+		allPersonCurveR:(state,val) => {//个人曲线数据。
+			state.curvePersonR = val;
+		},
+	},
+	actions:{
+		//find:
+		findAllCurve:(context) => {
+			axios.post(bp+'/Report/show_headInfo').then(({data})=>{
+				context.commit('allCurve',data);
+			});
+		},
+		//queryKeys:
+		findCurve:(context,form) => {
+			axios.post(bp+'/Report/show_headInfo',qs.stringify(form)).then(({data})=>{
+				context.commit('allCurve',data);
+			});
+		},
+		//reqClazz:
+		reqClazzCurve:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_class',qs.stringify(form)).then(({data})=>{
+					context.commit('allClazzCurve',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+		//reqClazzHeart:班级最高心率等
+		reqClazzHeartCurve:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_classHeartRate',qs.stringify(form)).then(({data})=>{
+					context.commit('allRateCurve',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	//请求数据报表班级曲线数据：
+		reqClazzCurveReport:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_Report',qs.stringify(form)).then(({data})=>{
+					context.commit('allClazzCurveR',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	//请求数据报表个人曲线数据：
+		reqPersonCurveReport:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/get_personReport',qs.stringify(form)).then(({data})=>{
+					context.commit('allPersonCurveR',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	}
+}
+
+		/*
+			form.date1 = date(form.date1);
+			form.date2 = date(form.date2);
+			function date(time){
+				if(time == undefined){
+					time = '1996-06-06';
+				}else if(time){
+					time = moment(time).format('YYYY-MM-DD');
+				}
+			}
+		*/

@@ -1,0 +1,292 @@
+<template>
+<div class="login" :style="style">
+   <!-- v2.0 -->
+  <div class="login_content">
+    <div class="login_title">
+        中赤智能手环云平台
+    </div>
+    <div class="login_body">
+      <div class="one">
+        <div class="left">
+          <p>欢迎登录</p>
+          <p>请输入您的用户名和密码</p>
+        </div>
+        <div class="right">
+          <i class="fa fa-key" style="font-size: 66px;"></i>
+        </div>
+      </div>
+      <div class="two">
+        <el-form :model="loginForm" :rules='rules' class='demo-ruleForm form' ref='loginForm'>
+        <el-form-item prop='user' :label-width="fw">
+          <el-input v-model="loginForm.user" placeholder="请输入用户名"></el-input>
+        </el-form-item>
+        <el-form-item prop='passwd' :label-width="fw">
+          <el-input type='password' v-model="loginForm.passwd" placeholder="请输入密码" @keyup.enter.native="login('loginForm')"></el-input>
+        </el-form-item>
+          <!-- <el-row>
+            <el-col :span="24"><el-input prop="user" v-model="loginForm.user" placeholder="请输入用户名"></el-input></el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24"><el-input prop="passwd" type='password' v-model="loginForm.passwd" placeholder="请输入密码"></el-input></el-col>
+          </el-row>
+           <el-row>
+            <el-col :span="24">
+              <el-button type='success' id='submit' :disabled='bool' @click="login('loginForm')">登录</el-button>
+            </el-col>
+          </el-row> -->
+          <el-row>
+            <el-col :span="24">
+              <el-button type='success' id='submit' @click="login('loginForm')">登录</el-button>
+            </el-col>
+          </el-row>
+        </el-form>  
+      </div>
+    </div>
+  </div>
+  <!-- v1.0 -->
+  <!--
+  <div class="left">
+    <img :src="img1" alt="">
+  </div>
+  <div class="right">
+    <p class="title">中赤智能手环云平台</p>
+    <div class="content">
+      <el-form :model="loginForm" :rules='rules' class='demo-ruleForm form' ref='loginForm'>
+        <el-form-item label="用户名：" prop='user' :label-width="fw">
+          <el-input v-model="loginForm.user"></el-input>
+        </el-form-item>
+        <el-form-item label="密码：" prop='passwd' :label-width="fw">
+          <el-input v-model="loginForm.passwd"></el-input>
+        </el-form-item>
+      </el-form>
+      <el-button type='info' id='submit' :disabled='bool' @click="login('loginForm')">登录</el-button>
+      <div id='find'><el-button type='text'>找回密码</el-button></div>
+    </div>
+  </div>
+  <div class="clear"></div>
+  -->
+</div>	
+</template>
+
+<script>
+import {mapActions,mapGetters} from 'vuex';
+import path from 'path';
+import $ from 'jquery';
+//import logo from '@/assets/logo.png';
+import logo from '@/assets/bg_1.jpg';
+let Base64 = require('js-base64').Base64;//导入加密算法
+let flag = 0;
+import cg from '../store/configure.js';
+var bp = cg.bp;
+let url = bp+'/Login/Index';
+//获取窗口大小
+let height = $(window).height();
+
+export default {  //必须暴露，否则警告。
+	name : 'Login',
+	data(){
+		return {
+      style:"height:"+height+"px",
+      fw:'0px',
+			img1:logo,
+			loginForm:{},
+      rules:{
+        user:[
+          {required:true,message:'请输入用户名',trigger: 'blur'},
+        ],
+        passwd:[
+          {required:true,message:'请输入密码',trigger: 'blur'},
+        ],
+      },
+		}
+	},
+	created(){
+   
+	},
+	methods:{
+    test(){
+      alert('---');
+    },
+		login(formName){
+    //直接登录：
+      /*sessionStorage.setItem('token','123');
+      this.$router.push('/');*/
+    //权限登录：(真实登录要放开)
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+  				var data = this.loginForm.user+'&'+this.loginForm.passwd;
+  			  data = Base64.encode(data);//加密。
+  			  var vm = this;
+  			  this.loginIn({user_name:data}).then((result)=>{
+            console.log(result)
+  		      if(result.data.code == 200){
+  		        sessionStorage.removeItem('token');//清空token
+  		        sessionStorage.setItem('token',result.data.token);
+              console.log('cookie:',document.cookie);
+  		        //跳转到主页home：
+  		        vm.$router.push('/');
+  		      }else if(result.data.code == 350){
+  		      	vm.$alert('非法用户登录，token被窃取，登录失败！','消息提示', {
+  		          confirmButtonText: '确定',
+  		        });
+  		      }else if(result.data.code == 400){
+  		      	vm.$alert(result.data.code_error,'消息提示', {
+  		          confirmButtonText: '确定',
+  		        });
+  		      }
+		      }).catch((error)=>{
+            console.log('后台报错'+error);
+          });
+		    } else {
+          return false;
+        }
+      }); 
+		},
+    ...mapActions(['loginIn']),
+	},
+}
+</script>
+
+<style type="text/css" scoped>
+/*v2.0*/
+.login {
+  position: relative;
+  background-image: url('../assets/bg_1.jpg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+.login .login_content {
+  position: absolute;
+  top: 80px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.login .login_content .login_title {
+  text-align: center;
+  font-size: 28px;
+  color: #f2f2f2;
+  font-weight: bolder;
+}
+.login .login_content .login_body{
+  width: 40%;
+  margin: 60px auto;
+  border-radius: 10px;
+  background: #fff;
+  animation-name: boxShadowBody;
+  animation-duration: 1.5s;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+}
+.login .login_content .login_body .one {
+  padding:18px;
+}
+.login .login_content .login_body .one:after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+.login .login_content .login_body .one .left {
+  width: 70%;
+  float: left;
+}
+.login .login_content .login_body .one .right {
+  margin-left: 70%;
+  width: 28%;
+}
+.login .login_content .login_body .one .right i {
+  height: 100px;
+  line-height: 100px;
+  color: rgb(221, 221, 221);
+}
+.login .login_content .login_body .one .left>p:nth-child(1) {
+  font-size: 22px;
+}
+.login .login_content .login_body .one .left>p:nth-child(2) {
+  font-size: 14px;
+  color:  rgb(136, 136, 136);
+}
+
+.login .login_content .login_body .two {
+  background-color: rgb(238, 238, 238);
+  padding: 18px;
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.login .login_content .login_body .two .el-row:not(:nth-child(3)) {
+  margin-bottom: 20px;
+}
+.login #submit {
+  width: 100%;
+  margin-bottom:20px;
+}
+
+/*
+@keyframes boxShadowBody{
+  100%{
+    box-shadow: 0px 0px 5px 5px rgba(204,204,204,0.7);
+  }
+  0%{
+    box-shadow: 0px 0px 7px 7px rgba(204,204,204,0.7);
+  }
+}
+*/
+
+
+/*v1.0*/
+/*
+  .Login{
+  	width:100%;
+  	height:656px;
+  	background:url(../assets/2.jpg) no-repeat;
+  	background-size:cover;
+  }
+  .clear{
+    clear:both;
+  }
+  .left{
+    float:left;
+    margin-top:220px;
+    margin-left:160px;
+  }
+  .right{
+    float:right;
+    margin-top:120px;
+    margin-right:160px;
+    width:500px;
+    height:400px;
+    box-shadow:6px 6px 10px #5A5E66; 
+    border-radius:10px;
+    background:url(../assets/3.jpg);
+  }
+  .right .title{
+    font-size: 20px;
+    font-weight: bolder;
+    text-align: center;
+    margin-top:35px;
+  }
+  .right .content{
+    width: 390px;
+    height: 250px;
+    margin: 20px 55px;
+    text-align:center;
+    border-radius:10px;
+    box-shadow:6px 6px 10px #5A5E66;
+    background:#f1e18e;
+  }
+  .right .content .form{
+    padding:30px 10% 0;
+  }
+  #submit{
+    width:80%;
+  } 
+  #find{
+    width:90%;
+    text-align:right;
+  }
+  #find .el-button:hover{
+    text-decoration:underline;
+  }
+*/
+</style>

@@ -1,0 +1,368 @@
+<!-- 班级设置  -->
+<template>
+	<div class="clazzSetting">
+		<el-row class='rowTop'>
+      <el-col :span='16'>
+        <el-form inline :model='cla' size='mini'>
+          <el-row>
+            <el-col :span='6'>
+              <el-form-item label=''>
+                <el-select v-model="cla.grade_id" placeholder="请选择年级">
+                  <el-option v-for="item in grades" :label="item.grade_name" :value="item.grade_id" :key="item.grade_id">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span='6'>
+              <el-form-item>
+                <el-button type='info' size='mini' @click='query' class="search"><i class="fa fa-search"></i>查询</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-col>
+			<el-col :span='8'>
+        <el-row type='flex' justify='end'>
+          <el-form inline size='mini'>
+            <el-col :span='12'>
+              <el-form-item class='but'>
+                <el-button type='info' size='mini' @click='add4' class="add"><i class="fa fa-plus"></i>新增班级</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span='12'>
+              <el-form-item class='but'>
+                <el-button type='info' size='mini' @click='batch4' class="adds"><i class="fa fa-plus-circle"></i>批量新增</el-button>
+              </el-form-item>
+            </el-col>
+          </el-form>
+        </el-row>
+			</el-col>
+		</el-row>
+    <el-table :data="clazz" class='table' border stripe :header-row-style="rowClass" size='mini'>
+      <el-table-column type="index" fixed label="序号" align='center'></el-table-column>
+      <el-table-column prop="class_id" label="id" fixed v-if='false' align='center'>
+      </el-table-column>
+      <el-table-column prop="class_name1" label="班级名称" fixed v-if='false' align='center'></el-table-column>
+      <el-table-column prop="grade_id" label="年级id" fixed v-if='false' align='center'></el-table-column>
+      <el-table-column prop="grade_name" label="年级名称" fixed align='center'></el-table-column>
+      <el-table-column prop="class_name" label="班级名称" fixed align='center'></el-table-column>
+      <el-table-column prop="class_abbreviation" label="班级简称" fixed align='center'></el-table-column>
+      <el-table-column prop="teach_id" label="班主任id" fixed v-if='false' align='center'></el-table-column>
+      <el-table-column prop="teach_name" label="班主任" fixed align='center'></el-table-column>
+      <el-table-column prop="min_heart" label="最低心率" align='center'></el-table-column>
+      <el-table-column prop="avg_heart" label="平均心率" align='center'></el-table-column>
+      <el-table-column prop="max_heart" label="最高心率" align='center'></el-table-column>
+      <el-table-column prop="first_heart" label="第一阶段心率" width='120' align='center'>
+      </el-table-column>
+      <el-table-column prop="second_heart" label="第二阶段心率" width='120' align='center'>
+      </el-table-column>
+      <el-table-column prop="third_heart" label="第三阶段心率" width='120' align='center'>
+      </el-table-column>
+      <el-table-column prop="class_status" label="状态" fixed='right' width='120' align='center'></el-table-column>
+      <el-table-column label="操作" fixed='right' width='120' align='center'>
+        <template slot-scope='scope'>
+          <i class="icon el-icon-edit" @click="edit4(scope.$index, scope.row)"></i>
+	        <i class="icon el-icon-delete" @click="delete4(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog :title="title4" :visible.sync="visible4" center>
+      <el-form :model="form4" :rules='rules' class='demo-ruleForm dialog' ref='form4' size='mini'>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="班主任姓名" :label-width="fw" prop='teach_id'>
+              <el-select v-model="form4.teach_id" placeholder="请选择班主任" style="width: 100%">
+                <el-option v-for="item in teachs" :label="item.teach_name" :value="item.teach_id" :key="item.teach_id"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="年级名称" :label-width="fw" prop='grade_id'>
+              <el-select v-model="form4.grade_id" placeholder="请选择年级" style="width: 100%">
+                <el-option v-for="item in grades" :label="item.grade_name" :value="item.grade_id" :key="item.grade_id"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="班级序号" :label-width="fw">
+              <el-input v-model="form4.class_no" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="班级名称" :label-width="fw" prop='class_name'>
+              <el-input v-model="form4.class_name" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="第一阶段心率" :label-width="fw">
+              <el-input v-model="form4.first_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="班级简称" :label-width="fw" prop='class_abbreviation'>
+              <el-input v-model="form4.class_abbreviation" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="第二阶段心率" :label-width="fw">
+              <el-input v-model="form4.second_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="平均心率" :label-width="fw">
+              <el-input v-model="form4.avg_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="第三阶段心率" :label-width="fw">
+              <el-input v-model="form4.third_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="最低心率" :label-width="fw">
+              <el-input v-model="form4.min_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='12'>
+            <el-form-item label="最高心率" :label-width="fw">
+              <el-input v-model="form4.max_heart" auto-complete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='12'>
+            <el-form-item label="启用状态" :label-width="fw"prop='class_status'>
+              <el-radio-group v-model="form4.class_status">
+                <el-radio label="启用">启用</el-radio>
+                <el-radio label="停用">停用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle4" size='mini'>取 消</el-button>
+        <el-button type="info" @click="submit4('form4')" class="yes" size='mini'>确 定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog :title="title4s" :visible.sync="visible4s" center>
+      <el-form :model="form4s" class='dialog4' size='mini'>
+        <el-form-item label="批量新增班级" :label-width="fw">
+          <el-input placeholder="请输入班级数量" v-model="form4s.class_num" style='width:92%'></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle4s" size='mini'>取 消</el-button>
+        <el-button type="info" @click="submit4s" class="yes" size='mini'>确 定</el-button>
+      </div>
+    </el-dialog> 
+	</div>
+</template>
+
+<script type="text/javascript">
+import {mapActions,mapGetters} from 'vuex';
+
+export default {
+  name: 'clazzSetting',
+  data(){
+    return {
+      fw:'100px',
+      title4:'班级',
+      title4s:'批量添加班级',
+      cla:{},
+      form4:{},
+      form4s:{},
+      visible4:false,
+      visible4s:false,
+      rules:{
+        teach_id:[
+          {required:true,message:'请选择班主任',trigger: 'change'},
+        ],
+        grade_id:[
+          {required:true,message:'请选择年级',trigger: 'change'},
+        ],
+        class_name:[
+          {required:true,message:'请输入班级名称',trigger: 'blur'},
+        ],
+        class_abbreviation:[
+          {required:true,message:'请输入班级简称',trigger: 'blur'},
+        ],
+        class_status:[
+          {required:true,message:'请选择启用状态',trigger: 'change'},
+        ],
+      },
+    }
+  },
+  created(){
+    this.findAllClazz();
+  },
+  computed:{
+    ...mapGetters(['clazz','grades','teachs']),
+  },
+  methods:{
+    add4(){
+      this.visible4=true;
+      this.title4='单个新增班级';
+      this.form4 = {class_status:'启用'};
+    },
+    batch4(){
+      if(this.cla.grade_id == undefined){
+        this.$notify({
+          type: 'warning',
+          message: '请先选择年级，再进行批量新增操作！',
+        });
+      }else{
+        this.visible4s=true;
+      }
+    },
+    edit4(i,row){
+      this.visible4=true;
+      this.title4='班级信息修改';
+      this.form4 = row;
+    },
+    delete4(i,row){
+      this.$confirm('此操作将永久删除该条数据，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deleteByIdClazz({class_id:row.class_id}).then((result)=>{
+          if(result.data.code == 200){
+            this.$notify({
+              title:'成功',
+              type: 'success',
+              message: '班级信息删除成功',
+            });
+          }else{
+            console.log('班级信息删除失败，后台返回状态码：'+result.data.code);
+          }
+        }).catch((error)=>{
+          console.log('班级信息删除失败，后台报错！-->'+error);
+        });
+      }).catch(() => {
+        this.$notify({
+          type: 'info',
+          message: '已取消删除'
+        });          
+      });
+    },
+    submit4(formName){
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.saveClazz(this.form4).then((result)=>{
+            if(result.data.code == 200){
+              this.$notify({
+                title:'成功',
+                type: 'success',
+                message: '操作成功'
+              });
+            }else{
+              console.log('班级设置操作失败，后台返回状态码：'+result.data.code);
+            }
+          }).catch((error)=>{
+            console.log('班级设置操作失败，后台报错！-->'+error);
+          });
+          this.visible4=false;
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });  
+    },
+    submit4s(){
+      let obj = {
+        grade_id:this.cla.grade_id,
+        class_num:this.form4s.class_num,
+      }
+      this.batchSaveClazz(obj).then((result)=>{
+        if(result.data.code == 200){
+          this.$notify({
+            title:'成功',
+            type: 'success',
+            message: '批量操作成功',
+          });
+        }else{
+          console.log('班级设置批量操作失败，后台返回状态码：'+result.data.code);
+        }
+      }).catch((error)=>{
+        console.log('班级设置批量操作失败，后台报错！-->'+error);
+      });
+      this.visible4s=false;
+    },
+    cancle4(){
+      this.visible4=false;
+    },
+    cancle4s(){this.visible4s=false;},
+    rowClass(row, index) {
+      return {"background-color":"#E6EBF5",'color':'#878D99'}
+    },
+    query(){
+      this.findClazz(this.cla).then((result)=>{}).catch((error)=>{
+        console.log('班级信息查询失败，后台报错！-->'+error);
+      });
+    },
+    ...mapActions(['findAllClazz','saveClazz','deleteByIdClazz','findClazz','batchSaveClazz']),
+  },
+}
+</script>
+
+<style scoped>
+  *{
+    font-size:12px;
+  }
+  .clazzSetting{
+    position: relative;
+  }
+  .icon {
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .table{
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    /*overflow: scroll;*/
+  }
+  .table .el-table-column{
+    text-align: center;
+  }
+  /* .dialog .el-input{
+    width:440px;
+  } */
+  .dialog-footer{
+    text-align:right;
+  }
+  .rowTop .el-form .el-form-item{
+    margin-top:-3px;
+    margin-bottom:11px;
+  }
+  .rowTop .but{
+    margin-right:0;
+    margin-left:8px;
+  } 
+  .search{
+    background: #448db8;
+    border:none;
+  }
+  .add{
+    background: #448db8;
+    border:none;
+  }
+  .adds{
+    background: #448db8;
+    border:none;
+  }
+  .yes{
+    background: #448db8;
+    border:none;
+  }
+</style>

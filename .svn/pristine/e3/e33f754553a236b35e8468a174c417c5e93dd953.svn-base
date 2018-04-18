@@ -1,0 +1,543 @@
+<template>
+  <div class="home">
+    <div class="jp-app-container">
+      <div class="jp-home-header">
+        <div class="logo">
+          <div id='logoDiv' style='display:inline-block;'>
+            <img :src="school_logo" alt="" id='homeLogo' width='54px' height='42px'>
+          </div>
+          <!-- <i class="fa fa-graduation-cap" style="font-size:42px"></i> -->
+          <div id='homeDiv'>{{msg}}</div>
+        </div>
+        <div class="right">
+          <ul class="userInfo">
+            <li><i class="userInfoIcon fa fa-user-circle-o"></i></li>
+            <li>{{power.user_account}}</li>
+          </ul>
+          <div class="logout" @click='quit'>
+            退出
+          </div>
+        </div>
+      </div>
+      <div class="jp-home-body">
+        <div class="jp-home-body-left">
+          <el-header class='bodyHeader' height='48px'>
+            <div class="head-left">
+              <ul class="shortcuts" v-for="i in power.module_info">
+                <li @click="downMenu" v-show="i.module_name=='班级监测'"><i class="fa fa-eye fa-fw"></i></li>
+                <li @click="downMenu" v-show="i.module_name=='开始上课'"><i class="fa fa-bell-o "></i></li>
+                <li @click="downMenu" v-show="i.module_name=='数据报表'"><i class="fa fa-line-chart"></i></li>
+                <li @click="downMenu" v-show="i.module_name=='平台设置'"><i class="fa fa-cog"></i></li>
+              </ul>
+            </div>
+          </el-header>
+          <el-menu unique-opened router background-color="#f2f2f2" text-color="#737373"
+            :default-active='flag' >
+          <!-- 
+            <el-submenu index="1">
+              <template slot="title"><i class="el-icon-message"></i>数据报表</template>
+              <el-menu-item index="1-1">暂未开放...</el-menu-item>
+            </el-submenu>
+          -->
+            <!-- <el-submenu v-for='i in paths' :index='i.index' :key='i.index'>
+              <template slot="title"><i :class="i.icon" id="router"></i>{{i.name}}</template>
+              <el-menu-item v-for='j in i.children' :index='j.index' :key='j.index' @click='routerName(i.name,j.name)' :t='j.name'><i class="fa fa-angle-double-right"></i>&nbsp;{{j.name}}</el-menu-item>
+            </el-submenu> -->
+            <el-submenu v-for='i in power.module_info' :index='i.module_web_url' :key='i.module_web_url'>
+              <template slot="title"><i :class="i.module_web_icon"></i>&nbsp;&nbsp;{{i.module_name}}</template>
+              <el-menu-item v-for='j in i.module_level2' :index='j.module_web_url' :key='j.module_web_url' :t='j.module_name'><i class="fa fa-angle-double-right"></i>&nbsp;&nbsp;{{j.module_name}}</el-menu-item>
+            </el-submenu>
+          <!-- 固定空白加载页： -->
+            <!-- <el-submenu index='/blank' key='/blank/loading' v-show='false'>
+              <template slot="title">加载页</template>
+              <el-menu-item index='/blank/loading' key='/blank/loading' t='加载首页'><i class="fa fa-angle-double-right"></i>&nbsp;固定空白加载页</el-menu-item>
+            </el-submenu> -->
+          </el-menu> 
+        </div>
+        <div class="jp-home-body-right">
+          <el-header class='bodyHeader' height='48px'>
+            <div class="head-right">
+              <el-breadcrumb separator-class="el-icon-arrow-right">
+                <el-breadcrumb-item>{{firstRouter}}</el-breadcrumb-item>
+                <el-breadcrumb-item>{{secondRouter}}</el-breadcrumb-item>
+              </el-breadcrumb>
+            </div>
+          </el-header>
+          <!-- 路由 -->
+          <router-view id='router'></router-view>
+        </div>
+      </div>
+      <!-- <div class="jp-home-footer">bottom</div> -->
+  </div>
+</div>
+</template>
+
+<script>
+import {mapActions,mapGetters} from 'vuex';
+import $ from 'jquery';
+import path from 'path';
+import localS from '@/store/localStorage';
+localS.local();  //执行本地存储。
+
+export default {
+  name: 'home',
+  data () {
+    return {
+      msg: '学生实时心率监测系统',
+      firstRouter:'',
+      secondRouter:'',
+      flag:'',
+      paths:[{
+        index:'2',
+        name:'班级监测',
+        icon:'fa fa-eye fa-fw',
+        children:[{
+          index:'/clazzMonitor/clazzHeartRateCurves',
+          name:'班级心率实时曲线',
+        }/*,{
+          index:'/clazzMonitor/clazzHeartRateList',
+          name:'班级心率实时列表',
+        },{
+          index:'/clazzMonitor/personalHeartRateCurves',
+          name:'个人心率曲线',
+        },{
+          index:'/clazzMonitor/exceptionsSummary',
+          name:'异常汇总',
+        },{
+          index:'/clazzMonitor/remarksCourseContent',
+          name:'备注上课内容',
+        }*/],
+      },{
+        index:'3',
+        name:'开始上课',
+        icon:'fa fa-bell-o ',
+        children:[{
+          index:'/clazzBegin/clazzHeartRateCurves',
+          name:'班级心率实时曲线',
+        }/*,{
+          index:'/clazzBegin/clazzHeartRateList',
+          name:'班级心率实时列表',
+        },{
+          index:'/clazzBegin/personalHeartRateCurves',
+          name:'个人心率曲线',
+        },{
+          index:'/clazzBegin/exceptionsSummary',
+          name:'异常汇总',
+        },{
+          index:'/clazzBegin/remarksCourseContent',
+          name:'备注上课内容',
+        },{
+          index:'/clazzBegin/bind',
+          name:'手环绑定',
+        }*/],
+      },{
+        index:'4',
+        name:'数据报表',
+        icon:'fa fa-line-chart',
+        children:[{
+          index:'/reports/clazzCurves',
+          name:'班级曲线报表',
+        },{
+          index:'/reports/clazzReport',
+          name:'班级数据报表',
+        },{
+          index:'/reports/exceptionReport',
+          name:'异常报表',
+        }],
+      },{
+        index:'6',
+        name:'平台设置',
+        icon:'fa fa-cog',
+        children:[{
+          index:'/settings/unitsClouds',
+          name:'单位管理',
+        },{
+          index:'/settings/units',
+          name:'单位管理',
+        },{
+          index:'/settings/users',
+          name:'用户管理',
+        },{
+          index:'/settings/usersClouds',
+          name:'用户管理',
+        },{
+          index:'/settings/timeTable',
+          name:'课表管理',
+        },{
+          index:'/settings/heartSetting',
+          name:'默认心率设置',
+        },{
+          index:'/settings/tools',
+          name:'手环工具箱',
+        }],
+      }],
+    }
+  },
+  mounted(){//预加载的页面。
+    
+  },
+  created(){
+    this.findAllUnit();
+
+  //为单位管理（云平台的ztree模拟点击，否则数据出不来）
+  //这样不稳定，如果网慢，这个超时时间就不够了。
+    $(function(){
+      var menus = $('.el-menu-item');
+      for(var i=0;i<menus.length;i++){
+        var t = menus.eq(i).attr('t');
+        if(t == '单位管理'){
+          setTimeout(function(){
+            menus.eq(i).trigger('click');
+            localStorage.setItem('unitCloudIndex',i);
+            setTimeout(function(){
+              menus.eq(i+1).trigger('click');
+            },100);
+          },100);
+          break;
+        }
+      }
+    });
+  //一定要放在这否则token拿的是上次的。
+    var token = localStorage.getItem('token');
+    let obj = {
+      token:token,
+      action:'index'
+    }
+    this.getPower(obj).then((data)=>{
+  //真实登录要放开：
+      if(data.code == 350){//如果token为空或token不正确
+        /*this.$message({
+          type: 'error',
+          message: '非法登录！请重新登录！'
+        });
+        this.$router.push('/login');*/
+      }
+      if(this.power.module_info == null){
+        this.$notify({
+          title:'提示',
+          type: 'warning',
+          message: '该用户没有任何权限，请先请求管理员进行授权！',
+        });
+        localStorage.removeItem('token');
+        this.$router.push('/login');
+      }else{
+      //默认页面（最后一个页面）：
+        var m = this.power.module_info;
+        for(var i=0;i<m.length;i++){
+          if(m[i].module_level2.length == 0){
+            if(m[i].module_name == '班级监测'){
+              var obj = {
+                module_name:'班级心率实时曲线',
+                module_web_url:'/clazzMonitor/clazzHeartRateCurves',
+              }
+              m[i].module_level2.push(obj);
+            }else if(m[i].module_name == '开始上课'){
+              var obj = {
+                module_name:'班级心率实时曲线',
+                module_web_url:'/clazzBegin/clazzHeartRateCurves',
+              }
+              m[i].module_level2.push(obj);
+            }else if(m[i].module_name == '数据报表'){
+              var vm = this;
+              $('.el-submenu').eq(i).click(function(){
+                vm.$notify({
+                  title: '友情提示',
+                  message: '该功能尚未开放，请访问别的页面！',
+                  position: 'top-right',
+                });
+              });
+            } 
+          }
+        }
+        var n = m[m.length-1].module_level2;
+        var url = n[n.length-1].module_web_url;
+      //  console.log(url);
+        this.flag = url;//设置默认页。
+        this.$router.push(url);//加载最后一个页面的路由
+      }
+    }).catch((error)=>{
+      console.log('登陆后获取左侧访问权失败，后台报错！-->'+error);
+    });
+  },
+  computed:{
+    ...mapGetters(['school_logo','power']),
+  },
+  methods:{
+  /*同步相应的页面*/
+    routerName(name1,name2){
+      this.firstRouter = name1;
+      this.secondRouter = name2;
+    },
+    downMenu(event){
+      var icon;
+      var target = $(event.target);
+      if(target.children().length>0){   //li
+        icon = $(target.children()[0]).prop("class").trim();
+      }else{
+        icon = target.prop("class").trim();
+      }
+      this.flag='';
+      this.firstRouter ='';
+      this.secondRouter = '';
+      this.power.module_info.forEach((item)=>{
+        // console.log(item.module_name,'====',item.module_web_icon.trim(),'==',icon);
+        if(item.module_level2.length==0){
+          this.flag = item.module_web_url;
+          this.$router.push(this.flag);
+          this.firstRouter = item.module_name;
+        }
+        if(item.module_level2.length!=0 && item.module_web_icon.trim()===icon){
+          console.log(item.module_name,'====',item.module_web_icon,'==',icon);
+          this.flag = item.module_level2[0].module_web_url;
+          this.$router.push(this.flag);
+          this.firstRouter = item.module_name;
+          this.secondRouter = item.module_level2[0].module_name;
+        }
+      })
+    },
+  //登录退出：
+    quit(){
+    //  window.location.href = 'about:blank';//空白页的网址。
+      this.$confirm('您确定要退出登录吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        let token = localStorage.getItem('token');
+        let obj = {
+          token:token,
+          action:'logout'
+        }
+        this.loginOut(obj).then((data)=>{
+          if(data.code == 350){//如果token为空或token不正确
+            /*this.$notify({
+              type: 'error',
+              message: '非法登录！请重新登录！'
+            });*/
+          }else if(data.code == 200){
+            this.$router.push('/login');//登出到登录页。
+            localStorage.removeItem('token');//同时清空token。
+          }else if(data.code == 400){
+            this.$notify({
+              type: 'error',
+              message: '登出失败！请检查网络！'
+            });
+          }else{
+            console.log('登出失败！后台返回状态码：'+data.code);
+          }
+        }).catch((error)=>{
+          console.log('登出操作失败，后台报错'+error);
+        });
+      }).catch(() => {
+        this.$notify({
+          type: 'info',
+          message: '已取消登出'
+        });          
+      });
+    },
+    ...mapActions(['findAllUnit','getPower','loginOut']),
+  },
+}
+</script>
+<style>
+.el-submenu.is-active .el-submenu__title {
+  border-bottom-color: #448db8;
+}
+</style>
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+/*取消菜单栏右侧边框*/
+.el-menu {
+  border-right: none;
+}
+.el-menu-item.is-active {
+  color: #448db8;
+}
+
+*{
+  margin: 0px;
+  padding:0px;
+}
+#app{
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+.jp-home-header {
+  background-color: #448db8;
+}
+.jp-home-header:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+.jp-home-header .logo {
+  float: left;
+  height: 60px;
+  line-height: 64px;
+  margin: auto 25px;
+  color: #FFFFFF;
+}
+.jp-home-header .right{
+  float: right;
+}
+.jp-home-header .right>*{
+  float: left;
+  height: 60px;
+  line-height: 60px;
+  text-align: center;
+}
+.jp-home-header .right:after{
+  content: '';
+  display: block;
+  clear: both;
+}
+.jp-home-header .userInfo{
+  width: 10em;
+  background-color: #7daf6a;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.jp-home-header .userInfo > li {
+  float: left;
+  background-color: #7daf6a;
+  color: #ffffff;
+}
+.jp-home-header .userInfo i.userInfoIcon{
+  line-height: 60px;
+  font-size: 40px;
+}
+.jp-home-header .userInfo>li:first-child{
+  width: 4em;
+  text-align: center;
+}
+.jp-home-header .right>div.logout{
+  width: 5em;
+  border-left: 1px solid #94d6ee;
+  cursor: pointer;
+  color: #ffffff;
+}
+.jp-home-body .bodyHeader{
+  background-color: #f2f2f2;
+  border-bottom: 1px solid #ccc;
+ /* border-right: 1px solid #ccc;*/
+} 
+.jp-home-body-left {
+  background-color: #f2f2f2;
+  border-right: 1px solid #ccc;
+  overflow-y:auto;
+  /* text-align:center;  */
+}
+.jp-home-body-left > .bodyHeader > .head-left > .shortcuts > li{
+  line-height: 42px;
+  float: left;
+  width: 42px;
+  border-radius: 2px;
+  margin: 2px;
+  text-align: center;
+  color: #FFF;
+  cursor: pointer;
+}
+.jp-home-body-left > .bodyHeader> .head-left > .shortcuts > li:nth-child(1){
+  background-color: #448db8;
+}
+
+.jp-home-body-left > .bodyHeader> .head-left > .shortcuts > li:nth-child(2){
+  font-weight: bolder;
+  background-color: #7daf6a;
+}
+.jp-home-body-left > .bodyHeader> .head-left > .shortcuts > li:nth-child(3){
+  background-color: #EB9E05;
+}
+.jp-home-body-left > .bodyHeader> .head-left > .shortcuts > li:nth-child(4){
+  background-color: #FA5555;
+}
+.jp-home-body-right {
+ /*  padding: 10px; */
+  overflow:auto;
+}
+.jp-home-footer{
+  background-color: #414141;
+}
+.jp-home-footer {
+  color: #FFFFFF;
+  text-align: center;
+  height: 40px;
+  line-height: 40px;
+}
+.el-menu-item{
+  height:38px;
+  line-height: 38px;
+}
+.el-breadcrumb {
+  line-height: 48px;
+  padding: 0 20px;
+}
+#logoDiv{
+  display:inline-block;
+  width:60px;
+  height:60px;
+}
+#homeDiv{
+  display:inline-block;
+  height:60px;
+  vertical-align:24px;
+  font-size: 22px;
+}
+#homeLogo{
+  vertical-align:10px;
+}
+#router{
+  margin: 10px;
+ /*  margin-left: 18px; */
+}
+</style>
+
+<!-- 
+              <el-submenu v-for='i in arr.module_info' :index='i.module_web_url' :key='i.module_web_url'>
+                <template slot="title"><i ></i>{{i.module_name}}</template>
+                <el-menu-item v-for='j in i.module_level2' :index='j.module_web_url' :key='j.module_web_url'><i class="fa fa-angle-double-right"></i>&nbsp;{{j.module_name}}</el-menu-item>
+              </el-submenu>  
+            -->
+           <!--   
+              <el-submenu index="2">
+                <template slot="title"><i class="el-icon-message"></i>班级监测</template>
+                <el-menu-item index="/clazzMonitor/clazzHeartRateCurves"><i class="fa fa-angle-double-right"></i>&nbsp;班级心率实时曲线</el-menu-item>
+                <el-menu-item index="/clazzMonitor/clazzHeartRateList"><i class="fa fa-angle-double-right"></i>&nbsp;实时监测班级列表</el-menu-item>
+                <el-menu-item index="/clazzMonitor/personalHeartRateCurves"><i class="fa fa-angle-double-right"></i>&nbsp;个人心率曲线</el-menu-item>
+                <el-menu-item index="/clazzMonitor/exceptionsSummary"><i class="fa fa-angle-double-right"></i>&nbsp;异常汇总</el-menu-item>
+                <el-menu-item index="/clazzMonitor/remarksCourseContent"><i class="fa fa-angle-double-right"></i>&nbsp;备注上课内容</el-menu-item>
+              </el-submenu>
+              <el-submenu index="3">
+                <template slot="title"><i class="el-icon-service"></i>开始上课</template>
+                <el-menu-item index="/clazzBegin/clazzHeartRateCurves"><i class="fa fa-angle-double-right"></i>&nbsp;班级心率实时曲线</el-menu-item>
+                <el-menu-item index="/clazzBegin/clazzHeartRateList"><i class="fa fa-angle-double-right"></i>&nbsp;实时监测班级列表</el-menu-item>
+                <el-menu-item index="/clazzBegin/personalHeartRateCurves"><i class="fa fa-angle-double-right"></i>&nbsp;个人心率曲线</el-menu-item>
+                <el-menu-item index="/clazzBegin/exceptionsSummary"><i class="fa fa-angle-double-right"></i>&nbsp;异常汇总</el-menu-item>
+                <el-menu-item index="/clazzBegin/remarksCourseContent"><i class="fa fa-angle-double-right"></i>&nbsp;备注上课内容</el-menu-item>
+                <el-menu-item index="/clazzBegin/bind"><i class="fa fa-angle-double-right"></i>&nbsp;手环绑定</el-menu-item>
+              </el-submenu>
+              <el-submenu index="4">
+                <template slot="title"><i class="el-icon-menu"></i>数据报表</template>
+                <el-menu-item index="/reports/clazzCurves"><i class="fa fa-angle-double-right"></i>&nbsp;班级曲线报表</el-menu-item>
+                <el-menu-item index="/reports/clazzReport"><i class="fa fa-angle-double-right"></i>&nbsp;班级数据报表</el-menu-item>
+                <el-menu-item index="/reports/exceptionReport"><i class="fa fa-angle-double-right"></i>&nbsp;异常报表</el-menu-item>
+              </el-submenu>
+              <el-submenu index="5">
+                <template slot="title"><i class="el-icon-menu"></i>数据报表（云）</template>
+              </el-submenu>
+              <el-submenu index="6">
+                <template slot="title"><i class="el-icon-setting"></i>平台设置</template>
+                <el-menu-item index="/settings/units"><i class="fa fa-angle-double-right"></i>&nbsp;单位信息</el-menu-item>
+                <el-menu-item index="/settings/unitsClouds"><i class="fa fa-angle-double-right"></i>&nbsp;单位管理（云）</el-menu-item>
+                <el-menu-item index="/settings/users"><i class="fa fa-angle-double-right"></i>&nbsp;用户管理</el-menu-item>
+                <el-menu-item index="/settings/usersClouds"><i class="fa fa-angle-double-right"></i>&nbsp;用户管理（云）</el-menu-item>
+                <el-menu-item index="/settings/timeTable"><i class="fa fa-angle-double-right"></i>&nbsp;课表管理</el-menu-item>
+                <el-menu-item index="/settings/heartSetting"><i class="fa fa-angle-double-right"></i>&nbsp;默认心率设置</el-menu-item>
+                <el-menu-item index="/settings/tools"><i class="fa fa-angle-double-right"></i>&nbsp;手环工具箱</el-menu-item>
+              </el-submenu>
+        -->

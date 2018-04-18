@@ -1,0 +1,131 @@
+<!-- 课程设置 -->
+<template>
+	<div class="courseSetting">
+		<el-row>
+			<el-col :span='12'>
+				<span>选择课程内容：</span>
+				<el-select v-model="course" placeholder="请选择课程内容" size='mini'>
+		      <el-option label="体育课程" value="体育课程"></el-option>
+		      <el-option label="课程活动" value="课程活动"></el-option>
+		      <el-option label="体育竞赛" value="体育竞赛"></el-option>
+		    </el-select>
+			</el-col>
+			<el-col :span='12'>
+				<el-row type='flex' justify='end'>
+					<el-button type='info' size='small' @click='add2'>新增课程</el-button>
+					<el-button type='info' size='small' @click='preserve2'>类型维护</el-button>
+				</el-row>
+			</el-col>
+		</el-row>
+		<el-table :data="courseData">
+      <el-table-column type="index"></el-table-column>
+      <el-table-column prop="lessionType" label="课程类型"></el-table-column>
+      <el-table-column prop="lessionName" label="课程名称"></el-table-column>
+      <el-table-column prop="state" label="状态"></el-table-column>
+      <el-table-column label="操作">
+	      <template slot-scope="scope">
+	        <i class="icon el-icon-edit" @click="edit2(scope.$index, scope.row)"></i>
+	        <i class="icon el-icon-delete" @click="delete2(scope.$index, scope.row)"></i>
+	      </template>
+	    </el-table-column>
+    </el-table>
+
+    <el-dialog :title="title2" :visible.sync="visible2">
+      <el-form :model="form2">
+        <el-form-item label="序号">
+          <el-input v-model="form2.no" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="课程类型">
+          <el-input v-model="form2.lessonType" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="课程名称">
+          <el-input v-model="form2.lessonName" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="启用状态">
+          <el-radio class="radio" v-model="form2.state" label="启用">启用</el-radio>
+          <el-radio class="radio" v-model="form2.state" label="停用">停用</el-radio>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle2">取 消</el-button>
+        <el-button type="info" @click="submit2">确 定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog :title="title22" :visible.sync="visible22">
+      <el-table :data="courseData22" style="width: 100%" height="250">
+        <el-table-column type="index" width="60"></el-table-column>
+        <el-table-column prop="lessonType" label="类型名称" width="150">
+        </el-table-column>
+        <el-table-column label="操作" width="180">
+          <template slot-scope='scope'>
+            <!-- <el-button size="mini" @click="edit22(scope.$index,scope.row)">修改</el-button> -->
+            <el-button size="mini" type="danger" @click="delete22(scope.$index,scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle22">取 消</el-button>
+        <el-button type="info" @click="submit22">确 定</el-button>
+      </div>
+    </el-dialog>
+
+	</div>
+</template>
+
+<script type="text/javascript">
+export default {
+  name: 'courseSetting',
+  data(){
+    return {
+      title2:'课程',
+      title22:'课程类型维护',
+      course:'',
+      form2:{},
+      form22:{},
+      visible2:false,
+      visible22:false,
+      courseData: [{
+        lessionType:'体育课程',
+        lessionName: '足球',
+        state:'已启用',
+      },{
+        lessionType:'体育课程',
+        lessionName: '足球',
+        state:'已启用',
+      },{
+        lessionType:'体育课程',
+        lessionName: '足球',
+        state:'已启用',
+      }],
+      courseData22: [{
+        lessonType:'体育课程',
+      },{
+        lessonType:'体育课程',
+      },{
+        lessonType:'体育课程',
+      }],
+    }
+  },
+  methods:{
+    add2(){this.visible2=true;this.title2='新增课程';},
+    preserve2(){this.visible22=true;},
+    edit2(i,row){
+    //  console.log(i,row);
+      this.visible2=true;this.title2='课程修改';
+    },
+    delete2(i,row){},
+    delete22(i,row){},
+    submit2(i,row){this.visible2=false;},
+    submit22(i,row){this.visible22=false;},
+    cancle2(){this.visible2=false;},
+    cancle22(){this.visible22=false;},
+  },
+}
+</script>
+
+<style>
+	.icon {
+		cursor: pointer;
+		font-size: 20px;
+	}
+</style>

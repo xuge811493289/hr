@@ -1,0 +1,85 @@
+<!-- 年级设置  -->
+<template>
+	<div class="gradeSetting">
+		<el-row type='flex' justify='end'>
+			<el-button type='info' size='small' @click='add3'>新增年级</el-button>
+		</el-row>
+    <el-table :data="gradeData" style="width: 100%" height="250">
+      <el-table-column type="index"></el-table-column>
+      <el-table-column prop="name" label="年级名称">
+      </el-table-column>
+      <el-table-column prop="sName" label="年级简称">
+      </el-table-column>
+       <el-table-column prop="state" label="状态">
+      </el-table-column>
+      <el-table-column label="操作">
+        <template slot-scope='scope'>
+          <i class="icon el-icon-edit" @click="edit3(scope.$index, scope.row)"></i>
+	        <i class="icon el-icon-delete" @click="delete3(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog :title="title3" :visible.sync="visible3">
+      <el-form :model="form3">
+        <el-form-item label="序号">
+          <el-input v-model="form3.no" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="年级名称">
+          <el-input v-model="form3.name" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="年级简称">
+          <el-input v-model="form3.sName" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="启用状态">
+          <el-radio class="radio" v-model="form3.state" label="启用">启用</el-radio>
+          <el-radio class="radio" v-model="form3.state" label="停用">停用</el-radio>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle3">取 消</el-button>
+        <el-button type="info" @click="submit3">确 定</el-button>
+      </div>
+    </el-dialog>
+	</div>
+</template>
+
+<script type="text/javascript">
+export default {
+  name: 'gradeSetting',
+  data(){
+    return {
+      title3:'年级',
+      form3:{},
+      visible3:false,
+      gradeData: [{
+        name:'小学一年级',
+        sName: '一',
+        state:'已启用',
+      },{
+        name:'小学二年级',
+        sName: '二',
+        state:'已启用',
+      },{
+        name:'小学三年级',
+        sName: '三',
+        state:'已启用',
+      }],
+    }
+  },
+  methods:{
+    add3(){this.visible3=true;this.title3='新增年级';},
+    edit3(i,row){this.visible3=true;this.title3='年级修改';},
+    delete3(i,row){},
+    submit3(i,row){this.visible3=false;},
+    cancle3(){this.visible3=false;},
+  },
+}
+</script>
+
+<style scoped>
+  .icon {
+    cursor: pointer;
+    font-size: 20px;
+  }
+</style>

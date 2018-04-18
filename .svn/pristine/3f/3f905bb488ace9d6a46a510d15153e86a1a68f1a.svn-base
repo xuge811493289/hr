@@ -1,0 +1,378 @@
+<template>
+  <div class="heartRate">
+    <el-row>
+      <el-col :span='12' class='col-top'>
+        基础心率参数设置
+      </el-col>
+      <el-col :span='12'>
+        <el-row type='flex' justify='end'>
+          <el-button type='info' size='small' class='but edit' @click='add2' :hidden='hide1'><!-- <i class="fa fa-pencil"></i> -->编辑</el-button>
+          <el-button type='info' size='small' class='but save' @click='save2' :hidden='hide2'><!-- <i class="fa fa-save"></i> -->保存</el-button>
+        </el-row>
+      </el-col>
+    </el-row>
+    <el-table :data="param2" width="100%"  class="table" size='mini' border stripe :header-row-style="rowClass" align='center'>
+      <el-table-column prop="heartrate_id" label="heartrate_id" v-if='false'></el-table-column>
+      <el-table-column prop="heartrate_name" label="参数名称" align='center'>
+        <template slot-scope='scope'>
+          <el-input v-model='scope.row.heartrate_name' size='mini' class='input' :disabled='bool' style='width:80%;'></el-input>
+        </template>
+      </el-table-column>
+      <el-table-column prop="heartrate_value" label="参数" align='center'>
+        <template slot-scope='scope'>
+          <el-input v-model='scope.row.heartrate_value' type="number"  @blur="heartRateCheck(scope.row.heartrate_value)" size='mini' style='width:75%;' :disabled='bool'></el-input>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="">
+        <template slot-scope='scope'>
+          <i class="icon el-icon-edit" @click="edit2(scope.$index, scope.row)"></i>
+          <i class="icon el-icon-delete" @click="delete2(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column> -->
+    </el-table>
+    <br><br>
+
+    <el-row>
+      <el-col :span='12'>
+        阶段心率参数设置
+      </el-col>
+      <el-col :span='12'>
+        <el-row type='flex' justify='end'>
+          <el-button type='info' size='small' class='but add' @click='add3'><!-- <i class="fa fa-plus"></i> -->新增</el-button>
+        </el-row>
+      </el-col>
+    </el-row>
+    <el-table :data="param3" style="width:100%" size='mini' border stripe :header-row-style="rowClass" align='center'>
+      <el-table-column prop="heartrate_id" label="heartrate_id" width="200" v-if='false' align='center'></el-table-column>
+      <el-table-column prop="heartrate_name" label="参数名称" width="300" align='center'>
+        <template slot-scope='scope'>
+          <el-input v-model='scope.row.heartrate_name' size='mini' class='input' :disabled='bool' style='width:80%;'></el-input>
+        </template>
+      </el-table-column>
+      <el-table-column prop="heartrate_value" label="参数" align='center'>
+        <template slot-scope='scope'>
+          <el-input v-model='scope.row.heartrate_value' size='mini' style='width:80%;' :disabled='bool'></el-input>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" align='center' width="120">
+        <template slot-scope='scope'>
+          <!-- <i class="icon el-icon-edit" @click="edit3(scope.$index, scope.row)"></i> -->
+          <i class="options fa fa-trash" @click="delete3(scope.$index, scope.row)"></i>
+
+        </template>
+      </el-table-column>
+    </el-table>
+<!-- 
+    <el-dialog :title="title2" :visible.sync="visible2">
+      <el-form :model="form2">
+        <el-form-item label="参数">
+          <el-input v-model="form2.val" auto-complete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle2">取 消</el-button>
+        <el-button type="info" @click="submit2">确 定</el-button>
+      </div>
+    </el-dialog>
+     -->
+    <el-dialog :visible.sync="visible3" class='dialog3' center>
+      <div slot="title" class="dialog-title">
+        {{title3}}
+      </div>
+      <el-form :model="form3" :rules='rules' class='demo-ruleForm' ref='form3' size="mini">
+        <el-form-item label="阶段心率名称" prop='heartrate_name' :label-width="fw">
+          <el-input v-model="form3.heartrate_name" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="阶段心率参数" prop='heartrate_value' :label-width="fw">
+          <el-input v-model="form3.heartrate_value" auto-complete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle3" size="mini">取 消</el-button>
+        <el-button type="info" @click="submit3('form3')" class="yes" size="mini">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import {mapActions,mapGetters} from 'vuex';
+
+export default {
+  name: 'heartRate',
+  data(){
+    return {
+      fw:'120px',
+  //    title2:'编辑参数',
+      title3:'新增参数',
+  //    visible2:false,
+      visible3:false,
+  //    form2:{},
+      form3:{
+        heartrate_name:'',
+        heartrate_value:'',
+      },
+      bool:true,
+      hide1:false,
+      hide2:true,
+      rules:{
+        heartrate_name:[
+          {required:true,message:'请输入阶段心率名称',trigger: 'blur'},
+        ],
+        heartrate_value:[
+          {required:true,message:'请输入阶段心率参数',trigger: 'blur'},
+        ],
+      }
+    }
+  },
+  created(){
+    this.findAllRate();
+  },
+  computed:{
+    ...mapGetters(['param2','param3']),
+  },
+  methods:{
+    add2(){
+      this.bool = false;
+      this.hide1 = true;
+      this.hide2 = false;
+    },
+    add3(){
+      this.form3 = {};
+      this.visible3 = true;
+      /*let obj = {
+        heartrate_name:'',
+        heartrate_value:'',
+      this.param3.push(obj);*/
+      /*  this.saveRate(this.form3).then((result)=>{
+        if(result.data.code == 200){
+          this.$notify({
+            type: 'success',
+            message: '操作成功'
+          });
+        }else{
+          console.log('操作失败');
+          console.log('后台返回状态码：'+result.data.code);
+        }
+      }).catch((error)=>{
+        console.log('操作失败，后台报错！');
+        console.log(error);
+      });*/
+    },
+    /*edit2(i,row){
+      this.visible2=true;
+      this.form2 = row;
+    },
+    edit3(i,row){
+      this.visible3=true;
+      this.form3 = row;
+    },*/
+  //  cancle2(){this.visible2=false;},
+    cancle3(){this.visible3=false;},
+    save2(){
+      var arr = [];
+      for(var i=0;i<this.param2.length;i++){
+        arr.push(this.param2[i]);
+      }
+      for(var j=0;j<this.param3.length;j++){
+        arr.push(this.param3[j]);
+      }
+      this.updateRate(arr).then((result)=>{
+        if(result.data.code == 200){
+          this.$notify({
+            title:'成功',
+            type: 'success',
+            message: '操作成功'
+          });
+        }else{
+          console.log('心率设置操作失败，后台返回状态码：'+result.data.code);
+        }
+      }).catch((error)=>{
+        console.log('心率设置操作失败，后台报错！-->'+error);
+      });
+      this.bool = true;
+      this.hide1 = false;
+      this.hide2 = true;
+    },
+  /*  submit2(){
+      this.saveRate(this.form2).then((result)=>{
+        if(result.data.code == 200){
+          this.$notify({
+            type: 'success',
+            message: '操作成功'
+          });
+        }else{
+          console.log('操作失败');
+          console.log('后台返回状态码：'+result.data.code);
+        }
+      }).catch((error)=>{
+        console.log('操作失败，后台报错！');
+        console.log(error);
+      });
+      this.visible2=false;
+    },*/
+    submit3(formName){
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.saveRate(this.form3).then((result)=>{
+            if(result.data.code == 200){
+              this.$notify({
+                title:'成功',
+                type: 'success',
+                message: '操作成功'
+              });
+            }else{
+              console.log('心率设置操作失败，后台返回状态码：'+result.data.code);
+            }
+          }).catch((error)=>{
+            console.log('心率设置操作失败，后台报错！-->'+error);
+          });
+          this.visible3=false;
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });  
+    },
+  /*  delete2(i,row){
+      this.$confirm('此操作将永久删除该条数据，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deleteByIdRate({rate_id:row.rate_id}).then((result)=>{
+          if(result.data.code == 200){
+            this.$message({
+              type: 'success',
+              message: '基础心率信息删除成功'
+            });
+          }else{
+            console.log('基础心率信息删除失败');
+            console.log('后台返回状态码：'+result.data.code);
+          }
+        }).catch((error)=>{
+          console.log('基础心率信息删除失败，后台报错！');
+          console.log(error);
+        });
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });          
+      });
+    },*/
+    delete3(i,row){
+      this.$confirm('此操作将永久删除该条数据，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deleteByIdRate({heartrate_id:row.heartrate_id}).then((result)=>{
+          if(result.data.code == 200){
+            this.$notify({
+              title:'成功',
+              type: 'success',
+              message: '阶段心率信息删除成功'
+            });
+          }else{
+            console.log('阶段心率信息删除失败，后台返回状态码：'+result.data.code);
+          }
+        }).catch((error)=>{
+          console.log('阶段心率信息删除失败，后台报错！-->'+error);
+        });
+      }).catch(() => {
+        this.$notify({
+          type: 'info',
+          message: '已取消删除'
+        });          
+      });
+    },
+    heartRateCheck(data){
+      console.log(data);
+    },
+    rowClass(row, index) {
+      return {"background-color":"#E6EBF5",'color':'#878D99'}
+    },
+    ...mapActions(['findAllRate','saveRate','updateRate','deleteByIdRate','findRate']),
+  },
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+  *{
+    font-size:12px;
+  }
+  .col-top{
+    line-height:26px;
+  }
+  .icon {
+    cursor: pointer;
+    font-size: 20px;
+  }
+  /*.table{
+    overflow:auto;
+    margin-top:8px;
+  }*/
+  .input{
+    display:inline-block;
+    width:120px;
+    height:28px;
+    line-height:28px;
+    text-align:center;
+  }
+  .dialog-footer{
+    text-align:right;
+  }
+  .el-table{
+    margin-top:12px;
+  }
+  .dialog3 .el-input{
+    width:90%;
+  }
+  .edit{
+    font-size:12px;
+    background: #448db8;
+    border:none;
+  }
+  .save{
+    font-size:12px;
+    background: #448db8;
+    border:none;
+  }
+  .yes{
+    font-size:12px;
+    background: #448db8;
+    /*border:none;*/
+  }
+  .add{
+    font-size:12px;
+    background: #448db8;
+    border:none;
+  }
+  .heartRate i.options{
+    padding: 0 5px;
+    cursor: pointer;
+    color: #448db8;
+  }
+</style>
+<style>
+   /*模态框样式*/
+  .dialog-title {
+    background-color: #448db8;
+    height: 52px;
+    line-height: 52px;
+    font-size: 18px;
+    color: #FFF;
+  }
+  .el-dialog__headerbtn i.el-dialog__close {
+    color: #FFF;
+  }
+  div.el-dialog__header {
+    padding: 0;
+  }
+  div.el-dialog--center .el-dialog__header {
+    padding-top: 0
+  }
+</style>
+

@@ -1,0 +1,105 @@
+import axios from '../axios';
+import qs from 'querystring';
+import moment from 'moment';
+import cg from '../configure.js';
+var bp = cg.bp;
+
+export default {
+	state:{
+		gradeData:[],
+		clazzData:[],
+		courseData:[],
+		tableData:[],
+		pagesData:0, //分页初始化，不能为空字符串，要用0，类型不同会报错。
+		hideData:false,
+	},
+	getters:{
+		gradeData:state => state.gradeData,
+		clazzData:state => state.clazzData,
+		courseData:state => state.courseData,
+		tableData:state => state.tableData,
+		pagesData:state => state.pagesData,
+		hideData:state => state.hideData,
+	},
+	mutations:{
+		allData:(state,val) => {
+			state.gradeData = val[0];
+			state.courseData = val[1];
+		},
+		allClazzData:(state,val) => {
+			state.clazzData = val;
+		},
+		allTableData:(state,val) => {
+			state.tableData = val[1];
+			state.pagesData = (+val[0])*10;
+			if(state.pagesData < 10){
+				state.hideData = true;
+			}
+		},
+	},
+	actions:{
+		//find:
+		findAllData:(context) => {
+			axios.post(bp+'/Report/show_headInfo').then(({data})=>{
+				context.commit('allData',data);
+			});
+		},
+		//reqClazzData:
+		reqClazzData:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_class',qs.stringify(form)).then(({data})=>{
+					context.commit('allClazzData',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+		//queryData:查分页data
+		queryData:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_classReport',qs.stringify(form)).then(({data})=>{
+					context.commit('allTableData',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+		//reqTableData:
+		reqTableData:(context,form) => {
+			if(form == undefined){
+				return new Promise((resolve,reject)=>{
+					axios.post(bp+'/Report/show_classReport').then(({data})=>{
+						context.commit('allTableData',data);
+						resolve(data);
+					}).catch((error)=>{
+						reject(error);
+					});
+				});
+			}else{
+				form.class_start = Date.parse(form.class_start);//转为时间戳。
+				form.class_start = form.class_start/1000;
+				form.class_end = Date.parse(form.class_end);
+				form.class_end = form.class_end/1000;
+				return new Promise((resolve,reject)=>{
+					axios.post(bp+'/Report/show_classReport',qs.stringify(form)).then(({data})=>{
+						context.commit('allTableData',data);
+						resolve(data);
+						form.class_start = form.class_start*1000;
+						form.class_end = form.class_end*1000;
+					}).catch((error)=>{
+						reject(error);
+					});
+				});
+			}
+		},
+	//下载班级报表：
+		downloadClassReport:(context) => {
+			axios.post(bp+'/report/download_classReport',qs.stringify({dowload_classReport
+:1})).then(()=>{});
+		},
+	}
+}
+
+

@@ -1,0 +1,17 @@
+//根据不同的学校进行修改：
+//var bp = 'http://10.0.7.193:8080/project/bracelet/Home';
+//var bp = 'http://10.0.7.99:8989/bracelet/Home';
+var bp = 'http://www.briup.cn:8989/bracelet/Home';
+var duration = 40;
+//var ip = 'http://10.0.7.99';   //实时曲线的ip
+var ip = 'http://www.briup.cn';   //实时曲线的ip
+var port = '8787';//端口。
+export default {
+//基础路径：
+	bp : bp,
+//一节课持续时间：
+	duration : duration,
+	ip : ip,
+	port : port,
+}
+

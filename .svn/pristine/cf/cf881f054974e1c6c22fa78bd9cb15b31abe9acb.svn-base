@@ -1,0 +1,108 @@
+import axios from '../axios';
+import qs from 'querystring';
+import cg from '../configure.js';
+var bp = cg.bp;
+
+export default {
+	state:{
+		student:[],
+		gradeStudent:[],
+		classStudent:[],
+		pagesStu:0,//学生分页
+		hideStu:false,//分页显示状态。
+	},
+	getters:{
+		student:state => state.student,
+		gradeStudent:state => state.gradeStudent,
+		classStudent:state => state.classStudent,
+		pagesStu:state => state.pagesStu,
+		hideStu:state => state.hideStu,
+	},
+	mutations:{
+		allStu:(state,val) => {
+			val[1].forEach(function(item,index){
+				item.stu_gender == 1 ? item.stu_gender = '女' : item.stu_gender = '男';
+				item.stu_status == 1 ? item.stu_status = '启用' : item.stu_status = '禁用';
+			});
+			state.student = val[1];
+			state.gradeStudent = val[0];
+			state.pagesStu = (+val[2])*10;
+			if(state.pagesStu < 10){
+				state.hideStu = true;
+			}
+		},
+		gradeStu:(state,val) => {
+			state.classStudent = val;
+		},
+	},
+	actions:{
+		saveStu:(context,form) => {
+			return new Promise((resolve,reject)=>{
+			//add:
+				if(form.stu_id==undefined){//如果id不存在，执行添加。
+					axios.post(bp+'/manager/add_student',qs.stringify(form)).then((result)=>{
+						context.dispatch('findAllStu');//刷新。
+						resolve(result);
+					}).catch((error)=>{
+						reject(error);
+					});
+			//update:
+				}else{  //否则执行修改。
+					console.log(qs.stringify(form));
+					axios.post(bp+'/manager/update_student',qs.stringify(form)).then((result)=>{
+						context.dispatch('findAllStu');//刷新。
+						resolve(result);
+					}).catch((error)=>{
+						reject(error);
+					});
+				}
+			});
+		},
+		//find:
+		findAllStu:(context) => {
+			axios.post(bp+'/manager/show_student').then(({data})=>{
+				context.commit('allStu',data);
+			});
+		},
+		//queryKeys:
+		findStu:(context,stu) => {
+			axios.post(bp+'/manager/show_student',qs.stringify(stu)).then(({data})=>{
+				context.commit('allStu',data);
+			});
+		},
+	//请求班级：
+		findClassStudent:(context,gid) => {
+			axios.post(bp+'/manager/show_classinfo',qs.stringify(gid)).then(({data})=>{
+				context.commit('gradeStu',data);
+			});
+		},
+		/*gradeAndClass:(context,ids) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/manager/delete_student',qs.stringify(ids)).then((result)=>{
+					context.dispatch('findAllStu');//刷新。
+					resolve(result);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},*/
+		//delete:
+		deleteByIdStu:(context,ids) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/manager/delete_student',qs.stringify(ids)).then((result)=>{
+					context.dispatch('findAllStu');//刷新。
+					resolve(result);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	//下载学生表：
+		/*downLoadStuTable:(context) => {
+			axios.post(bp+'/manager/show_student',qs.stringify({dowload_stuInfo:1})).then(()=>{});
+		},*/
+	}
+}
+
+
+//年级、班级需要数据，我这边只是不展示。

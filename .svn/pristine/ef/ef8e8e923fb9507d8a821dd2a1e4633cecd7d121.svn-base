@@ -1,0 +1,17 @@
+//根据不同的学校进行修改：
+//var bp = 'http://10.0.7.193:8080/project/bracelet/Home';
+//var bp = 'http://127.0.0.1:8989/bracelet/Home';
+var bp = 'http://10.0.7.99:8989/bracelet/Home';
+//var bp = '10.0.7.99:8989/bracelet/Application/Websender/excel.php'
+
+var duration = 40;
+var ip = '10.0.7.99';
+
+export default {
+//基础路径：
+	bp : bp,
+//一节课持续时间：
+	duration : duration,
+	ip : ip,
+}
+

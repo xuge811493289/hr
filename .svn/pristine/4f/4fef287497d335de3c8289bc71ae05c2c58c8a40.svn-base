@@ -1,0 +1,140 @@
+<!-- 班级设置  -->
+<template>
+	<div class="clazzSetting">
+		<el-row>
+			<el-col :span='12'>
+				<span>年级：</span>
+				<el-select v-model="course" placeholder="请选择年级" size='mini'>
+		      <el-option label="小学一年级" value="小学一年级"></el-option>
+		      <el-option label="小学二年级" value="小学二年级"></el-option>
+		      <el-option label="小学三年级" value="小学三年级"></el-option>
+		      <el-option label="小学四年级" value="小学四年级"></el-option>
+		      <el-option label="小学五年级" value="小学五年级"></el-option>
+		    </el-select>
+			</el-col>
+			<el-col :span='12'>
+				<el-row type='flex' justify='end'>
+					<el-button type='info' size='small' @click='add4'>新增班级</el-button>
+					<el-button type='info' size='small' @click='batch4'>批量新增</el-button>
+				</el-row>
+			</el-col>
+		</el-row>
+    <el-table :data="clazzData" style="width: 100%" height="250">
+      <el-table-column type="index"></el-table-column>
+      <el-table-column prop="clazz" label="班级名称">
+      </el-table-column>
+      <el-table-column prop="clazzSingle" label="班级简称" width="80">
+      </el-table-column>
+      <el-table-column prop="teacher" label="班主任">
+      </el-table-column>
+      <el-table-column prop="lowRate" label="最低心率">
+      </el-table-column>
+      <el-table-column prop="averageRate" label="平均心率">
+      </el-table-column>
+      <el-table-column prop="heightRate" label="最高心率">
+      </el-table-column>
+      <el-table-column prop="firstStage" label="第一阶段心率">
+      </el-table-column>
+      <el-table-column prop="secondStage" label="第二阶段心率">
+      </el-table-column>
+      <el-table-column prop="thirdStage" label="第三阶段心率">
+      </el-table-column>
+       <el-table-column prop="state" label="状态">
+      </el-table-column>
+      <el-table-column label="操作">
+        <template slot-scope='scope'>
+          <i class="icon el-icon-edit" @click="edit4(scope.$index, scope.row)"></i>
+	        <i class="icon el-icon-delete" @click="delete4(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog :title="title4" :visible.sync="visible4">
+      <el-form :model="form4">
+        <el-form-item label="序号">
+          <el-input v-model="form4.no" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="班级名称"><el-input v-model="form4.clazz" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="班级简称"><el-input v-model="form4.clazzSingle" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="班主任"><el-input v-model="form4.teacher" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="最低心率"><el-input v-model="form4.lowRate" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="平均心率"><el-input v-model="form4.averageRate" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="最高心率"><el-input v-model="form4.heightRate" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="第一阶段心率"><el-input v-model="form4.firstStage" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="第二阶段心率"><el-input v-model="form4.secondStage" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="第三阶段心率"><el-input v-model="form4.thirdStage" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="启用状态">
+          <el-radio class="radio" v-model="form4.state" label="启用">启用</el-radio>
+          <el-radio class="radio" v-model="form4.state" label="停用">停用</el-radio>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle4">取 消</el-button>
+        <el-button type="info" @click="submit4">确 定</el-button>
+      </div>
+    </el-dialog>
+	</div>
+</template>
+
+<script type="text/javascript">
+var flag = 0;
+export default {
+  name: 'clazzSetting',
+  data(){
+    return {
+      title4:'班级',
+      form4:{},
+      visible4:false,
+      clazzData: [{
+        clazz:'一年级1班',
+        clazzSingle: '1',
+        teacher: '陈洁',
+        lowRate: '58次/分钟',
+        averageRate:'75次/分钟',
+        heightRate: '100次/分钟',
+        firstStage: '75次/分钟',
+        secondStage:'85次/分钟',
+        thirdStage:'95次/分钟',
+        state:'已启用',
+        opetation:'修改'
+      }, {
+        clazz:'一年级2班',
+        clazzSingle: '2',
+        teacher: '刘华',
+        lowRate: '58次/分钟',
+        averageRate:'75次/分钟',
+        heightRate: '100次/分钟',
+        firstStage: '75次/分钟',
+        secondStage:'85次/分钟',
+        thirdStage:'95次/分钟',
+        state:'已启用',
+        opetation:'修改'
+      }],
+    }
+  },
+  methods:{
+    add4(){this.visible4=true;this.title4='新增班级';},
+    batch4(){this.add4();flag=1;},
+    edit4(i,row){this.visible4=true;this.title4='班级修改';},
+    delete4(i,row){},
+    submit4(i,row){flag==1?add4():this.visible4=false;},
+    cancle4(){this.visible4=false;flag=0;},
+  },
+}
+</script>
+
+<style scoped>
+  .icon {
+    cursor: pointer;
+    font-size: 20px;
+  }
+</style>

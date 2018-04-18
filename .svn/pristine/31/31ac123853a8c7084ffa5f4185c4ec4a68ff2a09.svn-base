@@ -1,0 +1,84 @@
+<!-- 上课节次  -->
+<template>
+	<div class="courseSection">
+		<el-row type='flex' justify='end'>
+			<el-button type='info' size='small' @click='add5'>新增节次</el-button>
+		</el-row>
+    <el-table :data="remarkData" style="width:100%" height="250">
+      <el-table-column type="index"></el-table-column>
+      <el-table-column prop="name" label="节次名称">
+      </el-table-column>
+       <el-table-column prop="stime" label="开始时间">
+      </el-table-column>
+       <el-table-column prop="etime" label="结束时间">
+      </el-table-column>
+      <el-table-column label="操作">
+        <template slot-scope='scope'>
+        	<i class="icon el-icon-edit" @click="edit5(scope.$index, scope.row)"></i>
+	        <i class="icon el-icon-delete" @click="delete5(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog :title="title5" :visible.sync="visible5">
+      <el-form :model="form5">
+        <el-form-item label="序号">
+          <el-input v-model="form5.no" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="节次名称">
+          <el-input v-model="form5.name" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="开始时间">
+          <el-input v-model="form5.sTime" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-input v-model="form5.eTime" auto-complete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle5">取 消</el-button>
+        <el-button type="info" @click="submit5">确 定</el-button>
+      </div>
+    </el-dialog>
+	</div>
+</template>
+
+<script type="text/javascript">
+export default {
+  name: 'courseSection',
+  data(){
+    return {
+      title5:'上课',
+      form5:{},
+      visible5:false,
+      remarkData:[{
+        name:'第一节',
+        stime: '8:00',
+        etime:'10:00',
+      },{
+        name:'第二节',
+        stime: '8:00',
+        etime:'10:00',
+      },{
+        name:'第三节',
+        stime: '8:00',
+        etime:'10:00',
+      }],
+    }
+  },
+  methods:{
+    add5(){this.visible5=true;this.title5='新增节次';},
+    edit5(i,row){this.visible5=true;this.title5='节次修改';},
+    delete5(i,row){},
+    submit5(i,row){this.visible5=false;},
+    cancle5(){this.visible5=false;},
+  },
+}
+</script>
+
+<style scoped>
+  .icon {
+    cursor: pointer;
+    font-size: 20px;
+  }
+</style>

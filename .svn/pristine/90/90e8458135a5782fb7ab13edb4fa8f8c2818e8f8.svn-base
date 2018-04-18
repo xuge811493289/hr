@@ -1,0 +1,249 @@
+<!-- 年级设置  -->
+<template>
+	<div class="gradeSetting">
+    <el-row class='rowTop'>
+      <el-col :span='16'>
+        <el-form inline :model='gra' size='mini'>
+          <el-row>
+            <el-col :span='6'>
+              <!-- <el-form-item>
+                <el-button type="text" size='mini'>年级设置</el-button>
+              </el-form-item> -->
+            </el-col>
+            <el-col :span='6'>
+              <el-form-item label=''>
+                <el-select v-model="gra.course" style='visibility:hidden;' placeholder="请选择年级">
+                  <el-option label="01" value="1"></el-option>
+                  <el-option label="02" value="2"></el-option>
+                  <el-option label="03" value="3"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span='6'>
+              <el-form-item>
+                <el-button type='info' size='mini' @click='query' style='visibility:hidden;' class="search"><i class="fa fa-search"></i>查询</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-col>
+      <el-col :span='8'>
+        <el-row type='flex' justify='end'>
+          <el-form inline size='mini'>
+            <el-row>
+              <el-col :span='24'>
+                <el-form-item class='but'>
+                  <el-button type='info' size='mini' @click='add3' class="add"><i class="fa fa-plus"></i>新增年级</el-button>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+      </el-row>
+      </el-col>
+    </el-row>
+    
+    <el-table :data="grade" class='table' border stripe :header-row-style="rowClass" size='mini'>
+      <el-table-column type="index" label="序号" header-align='center'style="width: 5%"></el-table-column>
+      <el-table-column prop="grade_order" label="年级序号" header-align='center'></el-table-column>
+      <el-table-column prop="grade_id" label="id" v-if='false' header-align='center'></el-table-column>
+      <el-table-column prop="grade_name" label="年级名称" header-align='center'>
+      </el-table-column>
+      <el-table-column prop="grade_abbreviation" label="年级简称" header-align='center'></el-table-column>
+      <el-table-column prop="grade_graduation" label="毕业年级" header-align='center'></el-table-column>
+      <el-table-column prop="grade_status" label="状态" header-align='center' style="width: 5%">
+      </el-table-column>
+      <el-table-column label="操作" header-align='center'style="width: 5%">
+        <template slot-scope='scope'>
+          <i class="icon el-icon-edit" @click="edit3(scope.$index, scope.row)"></i>
+	        <i class="icon el-icon-delete" @click="delete3(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog :title="title3" :visible.sync="visible3" center>
+      <el-form :model="form3" :rules='rules' style="height: 100%" class='demo-ruleForm dialog' ref='form3'>
+        <!-- <el-form-item label="序号" :label-width="fw">
+          <el-input v-model="form3.no" auto-complete="off"></el-input>
+        </el-form-item> -->
+        <el-form-item label="年级序号" :label-width="fw" prop='grade_order'>
+          <el-input v-model="form3.grade_order" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="年级名称" :label-width="fw" prop='grade_name'>
+          <el-input v-model="form3.grade_name" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="年级简称" :label-width="fw" prop='grade_abbreviation'>
+          <el-input v-model="form3.grade_abbreviation" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="是否毕业年级" :label-width="fw" prop='grade_graduation'>
+          <el-radio-group v-model="form3.grade_graduation">
+            <el-radio label="是">是</el-radio>
+            <el-radio label="否">否</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="启用状态" :label-width="fw" prop='grade_status'>
+          <el-radio-group v-model="form3.grade_status">
+            <el-radio label="启用">启用</el-radio>
+            <el-radio label="停用">停用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle3" size="small">取 消</el-button>
+        <el-button type="info" @click="submit3('form3')" class="yes" size="small">确 定</el-button>
+      </div>
+    </el-dialog>
+	</div>
+</template>
+
+<script type="text/javascript">
+import {mapActions,mapGetters} from 'vuex';
+
+export default {
+  name: 'gradeSetting',
+  data(){
+    return {
+      fw:'120px',
+      title3:'年级',
+      form3:{},
+      gra:{},
+      visible3:false,
+      rules:{
+        grade_order:[
+          {required:true,message:'请输入年级序号',trigger: 'blur'},
+        ],
+        grade_name:[
+          {required:true,message:'请输入年级名称',trigger: 'blur'},
+        ],
+        grade_abbreviation:[
+          {required:true,message:'请输入年级简称',trigger: 'blur'},
+        ],
+        grade_graduation:[
+          {required:true,message:'请选择是否毕业年级',trigger: 'change'},
+        ],
+        grade_status:[
+          {required:true,message:'请选择启用状态',trigger: 'change'},
+        ],
+      }, 
+    }
+  },
+  created(){
+    this.findAllGrade();
+  },
+  computed:{
+    ...mapGetters(['grade']),
+  },
+  methods:{
+    add3(){
+      this.visible3=true;
+      this.title3='新增年级';
+      this.form3 = {grade_status:'启用',grade_graduation:'否'};
+    },
+    edit3(i,row){
+      this.visible3=true;
+      this.title3='年级信息修改';
+      this.form3 = row;
+      this.form3.grade_oldGraduation = row.grade_graduation;//保留原来（是否毕业年级）的状态。
+    },
+    delete3(i,row){
+      this.$confirm('此操作将永久删除该条数据，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deleteByIdGrade({grade_id:row.grade_id}).then((result)=>{
+          if(result.data.code == 200){
+            this.$message({
+              type: 'success',
+              message: '年级信息删除成功'
+            });
+          }else{
+            console.log('年级信息删除失败，后台返回状态码：'+result.data.code);
+          }
+        }).catch((error)=>{
+          console.log('删除失败，后台报错！-->'+error);
+        });
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });          
+      });
+    },
+    submit3(formName){
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.saveGrade(this.form3).then((result)=>{
+            if(result.data.code == 200){
+              this.$message({
+                type: 'success',
+                message: '操作成功'
+              });
+            }else{
+              console.log('年级信息操作失败，后台返回状态码：'+result.data.code);
+            }
+          }).catch((error)=>{
+            console.log('年级信息操作失败，后台报错！-->'+error);
+          });
+          this.visible3=false;
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      }); 
+    },
+    cancle3(){
+      this.visible3=false;
+    },
+    rowClass(row, index) {
+      return {"background-color":"#E6EBF5",'color':'#878D99'}
+    },
+    query(){
+      this.findGrade(this.gra).then((result)=>{}).catch((error)=>{
+        console.log('年级查询操作失败，后台报错！-->'+error);
+      });
+    },
+    ...mapActions(['findAllGrade','saveGrade','deleteByIdGrade','findGrade']),
+  },
+}
+</script>
+
+<style scoped>
+  *{
+    font-size:12px;
+  }
+  .icon {
+    cursor: pointer;
+    font-size: 20px;
+  }
+  .gradeSetting{
+    position: relative;
+  }
+  .table{
+    position: absolute;
+    left: 0px;
+    right: 0px;
+  }
+  .dialog-footer{
+    text-align:right;
+  }
+  .rowTop .el-form .el-form-item{
+    margin-top:-3px;
+    margin-bottom:11px;
+  }
+  .rowTop .but{
+    margin-right:1px;
+    margin-left:8px;
+  } 
+  .add{
+    background: #67C23A;
+    border:none;
+  }
+  .search{
+    background: #448db8;
+    border:none;
+  }
+  .yes{
+    background: #EB9E05;
+    border:none;
+  }
+</style>

@@ -1,0 +1,480 @@
+<template>
+  <div class="layer" id="app">
+    <div id="tableMain">
+       <el-row type='flex' justify='end'>
+          <el-form size='mini'>
+              <el-form-item class='but'>
+                <el-button type='info' style='background-color:#448db8;border-color:none' size='small' @click='addUnits' class="add1">新增</el-button>
+              </el-form-item>
+          </el-form>
+        </el-row>
+      <ul id="dataTree" class="ztree"></ul>
+    </div>
+    <el-dialog :visible.sync="visible2" center>
+      <div slot="title" class="dialog-title">
+        {{title2}}
+      </div>
+      <el-form :model="form2" :rules='rules' class='demo-ruleForm dialog' ref='form2' size="mini">
+        <el-form-item label="单位名称" :label-width="fw" prop='name'>
+          <el-input v-model="form2.name" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="上级单位" :label-width="fw" prop='unit_id'>
+          <el-select v-model="form2.unit_id" placeholder="请选择上级单位" style="width:90%">
+            <el-option v-for="item in unitCloudUpper" :label="item.unit_name" :key="item.unit_id" :value="item.unit_id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="单位级别" :label-width="fw" prop='level_id'>
+          <el-select v-model="form2.level_id" placeholder="请选择单位级别" style="width:90%">
+            <el-option v-for="item in unitCloudLevel" :label="item.level_name" :key="item.level_id" :value="item.level_id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="平台显示名称" :label-width="fw" prop='unit_show_name'>
+          <el-input v-model="form2.unit_show_name" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="单位管理员账号" :label-width="fw" prop='user_account'>
+          <el-input v-model="form2.user_account" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="单位管理员密码" :label-width="fw" prop='user_passwd'>
+          <el-input type='password' v-model="form2.user_passwd" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="单位账号前缀" :label-width="fw" prop='user_prefix'>
+          <el-input v-model="form2.user_prefix" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="启用状态" :label-width="fw" prop='unit_status'>
+          <el-radio-group v-model="form2.unit_status">
+            <el-radio label="启用">启用</el-radio>
+            <el-radio label="禁用">禁用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle2" size="mini">取 消</el-button>
+        <el-button type="info" @click="submit2('form2')" class="yes" size="mini">确 定</el-button>
+      </div>
+    </el-dialog>
+    
+  </div>
+</template>
+
+<script>
+import {mapActions,mapGetters} from 'vuex';
+import $ from 'jquery';
+
+export default {
+  name: 'app',
+  data(){
+    return {
+      visible2:false,
+      form2:{},
+      title2:'云平台单位设置',
+      fw:'130px',
+      li_head://表头：
+      `<li class="head">
+        
+          <div class="divTd" style="width:17%">单位名称</div>
+          <div class="divTd" style="width:14%">级别</div>
+          <div class="divTd" style="width:17%">平台显示名称</div>
+          <div class="divTd" style="width:18%">管理员账号</div>
+          <div class="divTd" style="width:12%">单位账号前缀</div>
+          <div class="divTd" style="width:12%">状态</div>
+          <div class="divTd" style="width:10%">操作</div>
+
+      </li>`,
+      rules:{//表单非空验证:
+        name:[
+          {required:true,message:'请输入单位名称',trigger: 'blur'},
+        ],
+        level_id:[
+          {required:true,message:'请选择单位级别',trigger: 'change'},
+        ],
+        user_account:[
+          {required:true,message:'请输入管理员账号',trigger:'blur'},
+        ],
+        user_passwd:[
+          {required:true,message:'请输入管理员密码',trigger:'blur'},
+        ],
+        user_prefix:[
+          {required:true,message:'请输入单位账号前缀',trigger:'blur'},
+        ],
+        unit_status:[
+          {required:true,message:'请选择启用状态',trigger: 'change'},
+        ],
+      }, 
+    }
+  },
+  created(){
+    //查询数据
+    //this.findAllUnitClouds();
+  },
+  mounted(){
+    var newOpen = null;
+    var vm = this;
+    var setting;
+    this.findAllUnitCloudsAsync().then(()=>{
+       setting = {
+          view: {
+            showLine: true,
+            addDiyDom: addDiyDom,
+          },
+          data: {
+            simpleData: {
+              enable: true,
+            },
+          }
+        };
+        queryHandler(vm.unitCloud);
+        bindEvents();
+    });
+    function bindEvents(){
+      $('.add').click(function(){
+        var id = $(this).attr('u');//本元素的ID，也即子元素的pId。
+        vm.add2(id);
+      });
+      $('.edit').click(function(){
+        var id = $(this).attr('u');
+        var e = $(this).attr('e');
+        var p = $(this).parent().parent().find('.divTd');
+        var row = {};//获取table每行的数据到编辑的弹框中。
+        row.id = id;
+        row.name = p.eq(0).text();
+        row.unit_id = p.eq(1).text();
+        row.level_id = p.eq(3).text();
+        row.unit_show_name = p.eq(4).text();
+        row.user_account = p.eq(6).text();
+        row.user_passwd = p.eq(7).text();
+        row.user_prefix = p.eq(8).text();
+        row.unit_status = p.eq(9).text();
+        vm.edit2(row);
+      });
+      console.log($('.delete'));
+      $('.delete').click(function(){
+        var id = $(this).attr('u');
+        var el = $(this).attr('w');
+        var ids = {
+          id:id,
+          level_id:el
+        }
+        vm.delete2(ids);
+      });
+    }
+   
+/*自定义DOM节点*/
+    function addDiyDom(treeId, treeNode) {
+      var spaceWidth = 15;
+      var liObj = $("#" + treeNode.tId);
+      var aObj = $("#" + treeNode.tId + "_a");
+      var switchObj = $("#" + treeNode.tId + "_switch");
+      var icoObj = $("#" + treeNode.tId + "_ico");
+      var spanObj = $("#" + treeNode.tId + "_span");
+      aObj.attr('title', '');
+      aObj.append('<div class="divTd swich fnt" style="width:17%"></div>');
+      var div = $(liObj).find('div').eq(0);
+      //从默认的位置移除
+      switchObj.remove();
+      spanObj.remove();
+      icoObj.remove();
+      //在指定的div中添加
+      div.append(switchObj);
+      div.append(spanObj);
+      //隐藏了层次的span
+      var spaceStr = "<span style='height:1px;display: inline-block;width:" + (spaceWidth * treeNode.level) + "px'></span>";
+      switchObj.before(spaceStr);
+      //图标垂直居中
+      icoObj.css("margin-top","9px");
+      switchObj.after(icoObj);
+      var editStr = '';
+      //宽度需要和表头保持一致
+      editStr += '<div class="divTd" style="width:10%;display:none;">' + (treeNode.pId  == null ? '' : treeNode.pId )+ '</div>';
+      editStr += '<div class="divTd" style="width:14%">' + (treeNode.level_name  == null ? '' : treeNode.level_name ) + '</div>';
+      editStr += '<div class="divTd" style="width:10%;display:none;">' + (treeNode.level_id  == null ? '' : treeNode.level_id ) + '</div>';
+      editStr += '<div class="divTd" style="width:17%">' + (treeNode.unit_show_name  == null ? '' : treeNode.unit_show_name ) + '</div>';
+      editStr += '<div class="divTd" style="width:18%">' + (treeNode.user_account  == null ? '' : treeNode.user_account ) + '</div>';
+      editStr += '<div class="divTd" style="width:10%;display:none;">' + (treeNode.account  == null ? '' : treeNode.account ) + '</div>';
+      editStr += '<div class="divTd" style="width:10%;display:none;">' + (treeNode.user_passwd  == null ? '' : treeNode.user_passwd ) + '</div>';
+      editStr += '<div class="divTd" style="width:12%">' + (treeNode.user_prefix  == null ? '' : treeNode.user_prefix ) + '</div>';
+      editStr += '<div class="divTd" style="width:12%">' + (treeNode.unit_status == null ? '' :treeNode.unit_status ) + '</div>';
+      editStr += '<div class="divTd" style="width:10%">' + opt(treeNode) + '</div>'
+      aObj.append(editStr);
+    }
+  //初始化列表
+    function queryHandler(zTreeNodes){
+    //初始化树
+      $.fn.zTree.init($("#dataTree"), setting, zTreeNodes);
+    //添加表头
+      var li_head = vm.li_head;
+      var rows = $("#dataTree").find('li');
+      if (rows.length > 0) {
+          rows.eq(0).before(li_head)
+      }else {
+        $("#dataTree").append(li_head);
+        $("#dataTree").append('<li ><div style="text-align: center;line-height: 37px;" >无符合条件数据</div></li>')
+      }
+    }
+    function opt(treeNode) {
+      var htmlStr = '';
+    /*  htmlStr += '<input type="button" class="ck edit" value="编辑"/>';
+      htmlStr += '<input type="button" class="ck delete" value="删除"/>';*/
+      htmlStr += '<i class="ck icon el-icon-plus add" u="'+treeNode.id+'"></i>';
+      htmlStr += '<i class="ck icon el-icon-edit edit" u="'+treeNode.id+'" e="'+treeNode+'"></i>';
+      htmlStr += '<i class="ck icon el-icon-delete delete" w="'+treeNode.level_id+'" u="'+treeNode.id+'"></i>';
+      return htmlStr;
+    }
+    
+  },
+  computed:{
+    ...mapGetters(['unitCloud','unitCloudUpper','unitCloudLevel']),
+  },
+  methods:{
+  //刷新：
+    freshen(){
+      var vm = this;
+      setTimeout(function(){
+        vm.$router.push('/blank/loading');//加载页
+        setTimeout(function(){
+          vm.$router.push('/settings/unitsClouds');
+        },300);
+      },1);
+    },
+    addUnits(){
+      this.title2 = '云平台单位信息添加';
+      this.visible2 = true;
+      this.form2 = {unit_status:'启用',};
+    },
+    add2(){
+      this.title2 = '云平台单位信息添加';
+      this.visible2 = true;
+      this.form2 = {unit_status:'启用',};
+    },
+    edit2(row){
+      this.title2 = '云平台单位信息修改';
+      this.visible2 = true;
+      this.form2 = {}; //先清空。
+      this.form2 = row;
+      this.form2.user_passwd = '      ';//显示虚假密码。
+    },
+    delete2(ids){
+      this.$confirm('此操作将永久删除该条数据，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // var ids = {
+        //  id:id,
+        //  level_id:el
+        // }
+        this.deleteByIdUnitClouds(ids).then((result)=>{
+          if(result.data.code == 200){
+            this.$notify({
+              title:'成功',
+              type: 'success',
+              message: '单位信息删除成功'
+            });
+            this.freshen();//刷新。
+          }else{
+            this.$notify({
+              type: 'error',
+              message: '单位信息删除失败'
+            });
+          }
+        }).catch((error)=>{
+          console.log('单位信息删除失败，后台报错！-->'+error);
+        });
+      }).catch(() => {
+        this.$message({
+          type: 'error',
+          message: '单位信息删除失败'
+        });        
+      });
+    },
+    submit2(formName){
+      var flag = 0;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          var obj = this.form2;
+          obj.unit_name = this.form2.name;
+          obj.unit_upper_id = this.form2.unit_id;
+          obj.unit_id = this.form2.id;
+          obj.unit_level_id = this.form2.level_id;
+          this.saveUnitClouds(this.form2).then((result)=>{
+            if(result.data.code == 200){
+              this.$notify({
+                title:'成功',
+                type: 'success',
+                message: '操作成功'
+              });
+              this.freshen();//刷新。
+              flag = 0;
+            }else if(result.data.code == 300){
+              this.$notify({
+                type: 'warning',
+                message: '用户账号或前缀已存在，请重新输入'
+              });
+              flag = 1;
+            }else{
+              console.log('云单位操作失败，后台返回状态码：'+result.data.code);
+              flag = 0;
+            }
+            if(flag == 0){
+              this.visible2=false;
+            }
+          }).catch((error)=>{
+            console.log('云单位操作失败，后台报错！-->'+error);
+            flag = 0;
+            this.visible2=false;
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      }); 
+    },
+    cancle2(){
+      this.visible2 = false;
+    },
+    ...mapActions(['findAllUnitCloudsAsync','findAllUnitClouds','saveUnitClouds','deleteByIdUnitClouds','findUnitClouds']),
+  },
+}
+</script>
+
+<style>
+  *{
+    padding: 0;
+  }
+  .ztree *{
+   color: #606266;
+   font-size: 12px;
+  }
+  .ztree {
+    /*border:1px soild #E3E3E3;*/
+      padding: 0;
+      border-left: 1px solid #ebeef5;
+      border-right: 1px solid #ebeef5;
+      border-bottom: 1px solid #ebeef5;
+      margin-top: -5px;
+  }
+
+ .ztree li a {
+      vertical-align: middle;
+      height: 37px;
+      padding: 0px;
+  }
+
+  #tableMain .ztree li > a {
+      width: 100%;
+      height: 37px;
+  }
+  .ztree li a.curSelectedNode{
+      padding-top: 0px;
+     background-color: RGBA(235, 238, 245,0.7);
+     border: 1px solid #ebeef5;
+      border: 0px;
+      /*opacity: 0.5;*/
+      height: 37px;
+  }
+
+  .ztree li ul {
+      padding-left: 0px
+  }
+
+  .ztree div.divTd span {
+      line-height: 30px;
+      vertical-align: middle;
+  }
+
+  .ztree div.divTd {
+      height: 100%;
+      line-height: 37px;
+      border-bottom: 1px solid #ebeef5;
+      border-left: 1px solid #ebeef5;
+      text-align: center;
+      display: inline-block;
+      color: #606266;
+      overflow: hidden;
+  }
+
+  .ztree div.divTd:first-child {
+    text-align: left;
+    text-indent: 10px;
+    border-left: none;
+  }
+
+  #dataTree .ztree .head {
+      background: #ffffff;
+  }
+
+  .ztree .head div.divTd {
+      padding: 0;
+      color: #606266;
+      font-weight: bold;
+      height: 37px;
+      border-top: 1px solid #ebeef5;
+      float: left;
+
+  }
+
+  #dataTree .ztree .ck{
+      padding: 0 5px;
+      margin: 2px 3px 7px 3px;
+  }
+
+  li:nth-child(odd){
+      background-color:#FFFFFF;
+  }
+
+  li:nth-child(even){
+      background-color:#FAFAFA;
+  }
+  .dialog-footer{
+    text-align:right;
+  }
+.yes{
+    background:#448db8;
+    border:none;
+  }
+  .el-icon-plus{
+    font-size: 15px;
+    color: #67C23A;
+  }
+  .el-icon-edit{
+    font-size: 15px;
+    color: #409EFF;
+  }
+  .el-icon-delete{
+    font-size: 15px;
+    color: #FA5555;
+  }
+  .add1{
+    background: #448db8;
+    border:none;
+  }
+  i.ck.icon{
+    padding: 0 5px;
+  }
+  
+</style>
+<style>
+   /*模态框样式*/
+  .dialog-title {
+    background-color: #448db8;
+    height: 52px;
+    line-height: 52px;
+    font-size: 18px;
+    color: #FFF;
+  }
+  .el-dialog__headerbtn i.el-dialog__close {
+    color: #FFF;
+  }
+  div.el-dialog__header {
+    padding: 0;
+  }
+  div.el-dialog--center .el-dialog__header {
+    padding-top: 0
+  }
+  #tableMain .el-form-item--mini.el-form-item, .el-form-item--small.el-form-item {
+    margin-bottom: 10px;
+  }
+</style>
+
+

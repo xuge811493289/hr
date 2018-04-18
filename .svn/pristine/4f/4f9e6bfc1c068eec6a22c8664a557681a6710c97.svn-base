@@ -1,0 +1,335 @@
+<!-- 班级异常报表 -->
+<template>
+  <div class="err">
+    <el-row>
+      <el-col :span='24'>
+        <el-form :inline="true" :data="form" class="form" size='mini'>
+          <el-row>
+            <el-col :span='8'>
+              <el-form-item>
+                <el-col :span="11">
+                  <el-date-picker type="date" placeholder="选择开始日期" v-model="form.class_start" style="width:100%;"></el-date-picker>
+                </el-col>
+                <el-col :span="2">
+                  <el-row type='flex' justify='center'>-</el-row>
+                </el-col>
+                <el-col :span="11">
+                  <el-date-picker type="date" placeholder="选择结束日期" v-model="form.class_end" style="width: 100%;"></el-date-picker>
+                </el-col>
+              </el-form-item>
+            </el-col>
+            <!-- <el-col :span='3'>
+              <el-form-item label="" :inline="true">
+                <el-select v-model="form.course_type_id" placeholder="请选择当前课程">
+                  <el-option v-for="item in courseErr" :label="item.course_type_name" :value="item.course_type_id" :key="item.course_type_id">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col> -->
+            <el-col :span='3'>
+              <el-form-item label="" :inline="true">
+                <el-select v-model="form.grade_id" placeholder="请选择年级" @change='gradeChangeErr(form.grade_id)'>
+                  <el-option v-for="item in gradeErr" :label="item.grade_name" :value="item.grade_id" :key="item.grade_id">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span='3'>
+              <el-form-item label="" :inline="true">
+                <el-select v-model="form.class_id" placeholder="请选择班级" @change='clazzChangeErr(form.class_id)'>
+                  <el-option v-for="item in clazzErr" :label="item.class_name" :value="item.class_id" :key="item.class_id">
+                  </el-option>
+                </el-select> 
+              </el-form-item>
+            </el-col>
+            <el-col :span='4'>
+              <el-form-item label="" :inline="true">
+                <el-select v-model="form.rel_time" placeholder="请选择当前课程">
+                  <el-option v-for="item in clazzOnLineErr" :label="item.content" :value="item.rel_time" :key="item.rel_time">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span='2.5'>
+              <el-form-item>
+                <el-button type='info' size='small' :inline="true" @click='search' class='serach'><!-- <i class="fa fa-search"></i> -->&nbsp;查询</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span='2'>
+              <el-form-item>
+                 <el-button type="info" size='small' class='download' @click='downloadErr'><!-- <i class="fa fa-arrow-circle-down"></i> -->下载</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-col>
+    </el-row> 
+    <div class="content">
+      <!-- <el-row>  
+        <el-col :span="24">
+          <el-row type='flex' justify='center'>
+            <span class='title'>异常信息汇总</span>
+          </el-row>
+        </el-col>   
+      </el-row>     -->              
+      <el-row class='rowErr'>
+        <el-col :span="2" class='rowErr'>异常人数：</el-col>
+        <el-col :span="2" class='rowErr'><div>{{errNum.stu_num}}</div></el-col>
+        <el-col :span="2" class='rowErr'>异常次数：</el-col>
+        <el-col :span="2" class='rowErr'><div>{{errNum.total}}</div></el-col>
+        <el-col :span="16">
+          <form :action="downloadErrUrl" method='post' style='display:none;'>
+            <input type="text" name='class_start' v-model="form.class_start">
+            <input type="text" name='class_end' v-model="form.class_end">
+            <input type="text" name='rel_time' v-model="form.rel_time">
+            <input type="text" name='grade_id' v-model="form.grade_id">
+            <input type="text" name='class_id' v-model="form.class_id">
+            <input type="text" name='dowload_abnormalReport' value='1'>
+            <input type="submit" id='submitDownloadErr' value=''>
+          </form>
+          <!-- <el-row type='flex' justify='end'>
+            <el-button type="info" size='mini' class='download' @click='downloadErr'><i class="fa fa-arrow-circle-down"></i>下载</el-button>
+          </el-row> -->
+        </el-col>
+      </el-row>       
+    </div>
+    <!-- <el-table :data="tableErr" class='tableErr' id='tableErr' stripe :header-row-style="rowClass" border size='small' style='height:430px;'>
+      <el-table-column prop="stu_id" label="stu_id"></el-table-column>
+      <el-table-column prop="stu_number" label="学号"></el-table-column>
+      <el-table-column prop="stu_name" label="学生姓名"></el-table-column>
+      <el-table-column prop="stu_gender" label="性别"></el-table-column>
+      <el-table-column prop="content" label="异常状况"></el-table-column>
+      <el-table-column prop="start_time" label="异常开始时间"></el-table-column>
+      <el-table-column prop="end_time" label="异常持续时间"></el-table-column>
+      <el-table-column prop="course_name" label="课程"></el-table-column>
+      <el-table-column prop="course_type_name" label="课程内容"></el-table-column>
+    </el-table> -->
+    <div class="table4">
+      <table class='tableErr' id='tableErr' cellspacing="0">
+        <thead>
+          <tr>
+            <th style='display:none;'>stu_id</th>
+            <th>学号</th>
+            <th>学生姓名</th>
+            <th>性别</th>
+            <th>异常状况</th>
+            <th>异常开始时间</th>
+            <th>异常持续时间</th>
+            <th>课程</th>
+            <th>课程内容</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for='item in tableErrTemp2' :key="item.stu_id">
+            <td style='display:none;'>{{item.stu_id}}</td>
+            <td>{{item.stu_number}}</td>
+            <td>{{item.stu_name}}</td>
+            <td>{{item.stu_gender}}</td>
+            <td>{{item.content}}</td>
+            <td>{{item.start_time}}</td>
+            <td>{{item.chixu}}</td>
+            <td>{{item.course_type_name}}</td>
+            <td>{{item.course_name}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="block page" :hidden='hideErr'>
+      <el-pagination @current-change="currentChangeErr"
+        layout="prev, pager, next"
+        :total="pagesErr">
+      </el-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+import {mapActions,mapGetters} from 'vuex';
+import $ from 'jquery';
+import cg from '../../store/configure.js';
+var bp = cg.bp; 
+
+export default {
+  name:'err',
+  data(){
+    return {
+      tableErrTemp:[],
+      downloadErrUrl:bp+'/Report/abnormal_report',
+      form:{
+        class_start:'',
+        class_end:'',
+        grade_id:'',
+        class_id:'',
+        rel_time:''
+      },
+      arr:[],//用于存放合并数量的数组
+      j:0,//用于arr的下标
+      num:0,//用于累计arr项与项的和。
+    }
+  },
+  created(){
+    this.tableErrTemp = [];
+    this.findAllErr();
+  },
+  mounted(){
+  //  $('#tableErr tbody').empty();//一定要放在mounted里面。(只能操作一次，再次就失去作用)
+  },
+  computed:{
+    tableErrTemp2:function(){
+      return this.tableErrTemp;
+    },
+    ...mapGetters(['clazzErr','gradeErr','courseErr','tableErr','errNum','pagesErr','clazzOnLineErr','hideErr']),
+  },
+  methods:{
+    //分页：
+    currentChangeErr(val){
+      this.form.page = val;
+      this.queryErr(this.form).then((result)=>{
+        
+      }).catch((error)=>{
+        console.log('数据异常报表分页操作失败，后台报错！'+error);
+      });
+    },
+    gradeChangeErr(gid){
+      this.form.class_id='';
+      this.reqClazzErr({grade_id:gid}).then().catch((error)=>{
+        console.log('数据异常报表年级获取班级操作失败，后台报错！'+error);
+      });
+    },
+    clazzChangeErr(cid){
+      this.reqClazzOnLineErr({class_id:cid}).then().catch((error)=>{
+        console.log('数据异常报表班级请求当前课程操作失败，后台报错！'+error);
+      });
+    },
+    mc(tableId,startRow,endRow,col) {//表格合并
+      var tb = $(tableId)[0];
+    //  tb = table.children[2].children[0];
+      if (col >= tb.rows[0].cells.length) {
+        return ;
+      }
+      if (col == 0) { endRow = tb.rows.length-1; }
+      for (var i = startRow; i < endRow; i++) {
+        if (tb.rows[startRow].cells[col].innerHTML == tb.rows[i + 1].cells[0].innerHTML) {
+          tb.rows[i + 1].removeChild(tb.rows[i + 1].cells[0]);
+          tb.rows[startRow].cells[col].rowSpan = (tb.rows[startRow].cells[col].rowSpan | 0) + 1;
+          if (i == endRow - 1 && startRow != endRow) {
+            this.mc(tableId, startRow, endRow, col + 1);
+          }
+        } else {
+          this.mc(tableId, startRow, i + 0, col + 1);
+          startRow = i + 1;
+        }
+      }
+    },
+    downloadErr(){
+      $('#submitDownloadErr').trigger('click');
+    },
+    search(){
+      this.reqTableErr(this.form).then((data)=>{
+        this.tableErrTemp = this.tableErr;
+        var vm = this;
+        setTimeout(function(){
+          vm.oneClick();
+          setTimeout(function(){
+            vm.oneClick();
+          },300);
+        },1);
+      }).catch((error)=>{
+        this.$notify.error({
+          title:'错误',
+          message:'查询异常报表失败'
+        });
+        console.log('数据报表异常信息查询失败，后台报错！'+error);
+      });
+    },
+    oneClick(){
+      // 在这里操作
+      this.mc('#tableErr',0,0,0);
+    },
+    rowClass(row, index) {
+      return {"background-color":"#E6EBF5",'color':'#878D99'}
+    },
+    ...mapActions(['findAllErr','reqClazzErr','reqTableErr','queryErr','reqClazzOnLineErr','downloadErrReport']),
+    /*rc2({row,column,rowIndex,columnIndex}){//合并列
+      if (rowIndex % 2 === 0) {
+        if (columnIndex === 0) {
+          return [1,2];
+        } else if (columnIndex === 1) {
+          return [0,0];
+        }
+      }
+    },*/
+  }
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+ .el-col {
+    height: 32px;
+  }
+  *{
+    margin:0px;
+    font-size:12px;
+  }
+  .err{
+    position: relative;
+    /* margin-top: 8px; */
+  }
+  .title{
+    font-size:20px;
+    margin-top: 5px;
+  }
+  .tableErr{
+    font-size: 12px;
+    overflow:auto;
+    margin-top: 3px;
+    border-collapse: collapse;  /*边框合并*/
+  }
+  .table4{
+    position: absolute;
+    left: 0px;
+    right: 0px;
+   /* height:385px;*/
+  }
+  #tableErr{
+    width:100%;
+    /*border:1px solid #e4e7ed;*/
+  }
+  /* #tableErr tr:nth-child(odd){  隔行变色
+    background:#ddd;
+  } */
+  #tableErr tr{
+    height:38px;
+  }
+  #tableErr tr th,#tableErr tr td{
+    font-size: 12px;
+    border:1px solid #e4e7ed;
+  }
+  #tableErr tr th{
+    background: #FFFFFF;
+    color:#878D99;
+  }
+  #tableErr tr td{
+    padding-left:10px;
+  }
+  .download{
+    font-size: 12px;
+    background: #448db8;
+    border: none;
+  }
+  .serach{
+    background: #448db8;
+    border: none;
+    font-size: 12px;
+  }
+  .rowErr{
+    height:38px;
+    line-height:38px;
+  }
+  /* .page{
+    position:fixed;
+    left:260px;
+    top:600px;
+  } */
+</style>

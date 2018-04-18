@@ -1,0 +1,550 @@
+<!-- 教师用户  -->
+<template>
+  <div class="teacher">
+    <el-row class='rowTop'>
+      <el-col :span='14'>
+        <el-form inline :model='tch' size='mini'>
+          <el-row>
+            <el-col :span='6'>
+              <el-form-item>
+                <el-input v-model='tch.keys' placeholder='请输入关键字'></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span='6'>
+              <el-form-item>
+                <el-button type='info' size='small' @click='query' class="search"><!-- <i class="fa fa-search"></i> -->&nbsp;查询</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-col>
+      <el-col :span='10'>
+        <el-row type='flex' justify='end'>
+          <el-form inline size='mini'>
+            <el-col :span='8'>
+              <el-form-item class='but'>
+                <el-button type='info' size='small' @click='single2' class="add"><!-- <i class="fa fa-plus"></i> -->新增教师</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span='8'>
+              <el-form-item class='but'>
+                <el-button type='info' size='small' @click='admin2' class="edit"><!-- <i class="fa fa-cog"></i> -->用户授权</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span='8'>
+              <el-form-item class='but'>
+                <el-button type='info' size='small' @click='batch2' class="adds"><!-- <i class="fa fa-plus-circle"></i> -->批量导入</el-button>
+              </el-form-item>
+            </el-col>
+          </el-form>
+        </el-row>
+      </el-col>
+    </el-row>
+    <el-table :data="teachers" style="width: 100%" class='table' border stripe :header-row-style="rowClass" size='mini' @selection-change="selectArr" align='center'>
+      <el-table-column type="selection" align='center'></el-table-column>
+      <el-table-column type="index" label='序号' align='center'></el-table-column>
+      <el-table-column prop="teach_id" label="teach_id" v-if='false' align='center'></el-table-column>
+      <el-table-column prop="teach_name" label="姓名" align='center'></el-table-column>
+      <el-table-column prop="teach_passwd" label="密码" v-if='false' align='center'></el-table-column>
+      <el-table-column prop="teach_account" label="教师帐号" align='center'></el-table-column>
+      <el-table-column prop="teach_tel" label="手机号码" align='center'></el-table-column>
+      <el-table-column prop="teach_gender" label="性别" align='center'></el-table-column>
+      <el-table-column prop="teach_status" label="启用状态" align='center' width='80'></el-table-column>
+      <el-table-column label="操作" align='center' width='80'>
+        <template slot-scope='scope'>
+          <i class="options fa fa-edit" @click="edit2(scope.$index, scope.row)"></i>
+	        <i class="options fa fa-trash" @click="delete2(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div class="block" :hidden='hideTeach'>
+      <el-pagination @current-change="currentChangeTeach"
+        layout="prev, pager, next"
+        :total="pageTeach">
+      </el-pagination>
+    </div>
+
+    <el-dialog :visible.sync="visible2" center>
+      <div slot="title" class="dialog-title">
+        {{title2}}
+      </div>
+      <el-form :model="form2" :rules='rules' class='demo-ruleForm dialog' ref='form2' size='mini'>
+        <!-- <el-form-item label="序号" :label-width="fw">
+          <el-input v-model="form2.no" auto-complete="off"></el-input>
+        </el-form-item> -->
+        <el-form-item label="教师姓名" :label-width="fw" prop='teach_name'>
+          <el-input v-model="form2.teach_name" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="教师帐号" :label-width="fw" prop='teach_account'>
+          <el-input v-model="form2.teach_account" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="登录密码" :label-width="fw" prop='teach_passwd'>
+          <el-input type='password' v-model="form2.teach_passwd" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号码" :label-width="fw" prop='teach_tel'>
+          <el-input v-model="form2.teach_tel" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="性别" :label-width="fw" prop='teach_gender'>
+          <el-radio-group v-model="form2.teach_gender">
+            <el-radio label="男">男</el-radio>
+            <el-radio label="女">女</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="启用状态" :label-width="fw" prop='teach_status'>
+          <el-radio-group v-model="form2.teach_status">
+            <el-radio label="启用">启用</el-radio>
+            <el-radio label="禁用">禁用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle2" size='mini'>取 消</el-button>
+        <el-button type="info" @click="submit2('form2')" class="yes" size='mini'>确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog :title="title2s" :visible.sync="visible2s" center>
+      <div slot="title" class="dialog-title">
+        {{title2s}}
+      </div>
+    <!--
+      <el-row>
+        <el-col :span="18" :offset="4">
+           <el-upload class="upload-demo" ref="upload" center
+            action="https://jsonplaceholder.typicode.com/posts/" :show-file-list="false" :on-preview="handlePreview" :on-remove="handleRemove" :file-list="fileList" :auto-upload="false" :on-change="handleChange">
+              <el-input style="width:420px" slot="trigger" v-model="filename" size="small" type="info" placeholder="选取文件">选取文件</el-input>
+          </el-upload> 
+        </el-col>
+      </el-row>
+    -->
+      <el-form :model="form2s" class='dialog3' size='mini'>
+        <el-row>
+          <el-col :span='6'>
+            <el-form-item label="">
+              <el-row type='flex' justify='end'>
+                <el-button type='info' size='mini' @click='downloadTeach' class="download">下载模版</el-button>
+              </el-row>
+            </el-form-item>
+          </el-col>
+          <el-col :span='18'>
+            <el-form-item label="">
+              <el-input style="width:90%" v-model="filename" placeholder="手环批量导入：文件上传"></el-input>
+              <form :action="teachUpUrl" method="post" enctype="multipart/form-data" target='iframe_display' style='position:relative; opacity:0;'>
+                <iframe name="iframe_display" style="display:none;"></iframe>   
+                <input type="file" id='file' name="excelData" style='position:absolute;top:-30px;left:0; width:90%' value='' @change='changeFileTeacher' />
+                <input type="submit" id='submit' value="" style='position:absolute;top:88px;left:-166px;' />
+              </form>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancle2s" size='mini'>取 消</el-button>
+        <el-button type="info" @click="submit2s" class="adds" size='mini'>导 入</el-button>
+      </div>
+    </el-dialog> 
+
+    <el-dialog :visible.sync="visibleAdmin" center>
+      <div slot="title" class="dialog-title">
+        {{titleAdmin}}
+      </div>
+      <el-tree ref="auth" :data="teacherAdmin" node-key="module_id" :default-checked-keys='teaadminOne':props="props"  show-checkbox></el-tree >
+      <div slot="footer" class="dialog-footer">
+         <el-button @click="cancleAdmin" size='mini'>取 消</el-button>
+         <el-button type="info" @click="submitAdmin" class="yes" size='mini'>确 定</el-button>
+      </div>
+    </el-dialog>  
+  </div>
+</template>
+
+<script>
+import {mapActions,mapGetters} from 'vuex';
+import cg from '../../../store/configure.js';
+import $ from 'jquery';
+var bp = cg.bp; 
+var token = sessionStorage.getItem('token');
+console.log(token)
+
+export default {
+  name: 'teacher',
+  data(){
+    return {
+      fw:'120px',
+      tch:{},
+      title2:'教师用户',
+      title2s:'批量添加教师用户',
+      titleAdmin:'用户授权',
+      teachUpUrl:bp+'/manager/teacher_up?token='+token,
+      form2:{},
+      form2s:{},
+      formAdmin:{},
+      visible2:false,
+      visible2s:false,
+      visibleAdmin:false,
+      props: {
+        label: 'module_name',
+        children: 'module_level2'
+      },
+      filename:'',
+      selectTeacher:[],//选中教师的id列表。
+      rules:{
+        teach_name:[
+          {required:true,message:'请输入姓名',trigger: 'blur'},
+        ],
+        teach_account:[
+          {required:true,message:'请输入帐号',trigger: 'blur'},
+        ],
+        teach_passwd:[
+          {required:true,message:'请输入密码',trigger: 'blur'},
+        ],
+        teach_tel:[
+          {required:true,message:'请输入电话',trigger: 'blur'},
+          {min:11,max:11,message:'长度为11位',trigger: 'blur'},
+        ],
+        teach_gender:[
+          {required:true,message:'请选择性别',trigger: 'change'},
+        ],
+        teach_status:[
+          {required:true,message:'请选择启用状态',trigger: 'change'},
+        ],
+      },
+    }
+  },
+  created(){
+    this.findAllTch();
+  },
+  mounted(){
+    
+  },
+  computed:{
+    ...mapGetters(['teachers','pageTeach','teacherAdmin','hideTeach','teaadminOne']),
+  },
+  methods:{
+    selectArr(val){
+      this.selectTeacher = [];//清空，避免累加。
+      for(var i=0;i<val.length;i++){
+        this.selectTeacher.push(val[i].teach_id);
+      }
+    },
+    //分页：
+    currentChangeTeach(val){
+      this.tch.page = val;
+      this.queryTeach(this.tch).then((result)=>{
+        
+      }).catch((error)=>{
+        console.log('教师页面分页操作失败，后台报错'+error);
+      });
+    },
+    downloadTeach(){//下载模版
+    //跳转到下载地址：
+      window.location.href = bp+'/manager/teacher_download?token='+token;
+    },
+    changeFileTeacher(){//当用户选择文件时。
+      this.filename = $('#file').val();
+    },
+    edit2(i,row){
+      this.visible2=true;
+      this.title2='教师信息修改';
+      this.form2 = row;
+      this.form2.teach_passwd = '      ';
+    },
+    delete2(i,row){
+      this.$confirm('此操作将永久删除该条数据，是否继续?','提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deleteByIdTch({teach_id:row.teach_id}).then((result)=>{
+          if(result.data.code == 200){
+            this.$notify({
+              title:'成功',
+              type: 'success',
+              message: '教师信息删除成功',
+            });
+          }else{
+            console.log('教师信息删除失败，后台返回状态码：'+result.data.code);
+          }
+        }).catch((error)=>{
+          console.log('教师信息删除失败，后台报错！-->'+error);
+        });
+      }).catch(() => {
+        this.$notify({
+          type: 'info',
+          message: '已取消删除',
+        });          
+      });
+    },
+    single2(){
+      this.visible2=true;
+      this.title2='单个新增教师';
+      this.form2={teach_gender:'女',teach_status:'启用'};
+    },
+    batch2(){
+      this.visible2s=true;
+      this.filename='';//清空输入框用户选择的文件。
+    },
+    admin2(){
+      if(this.selectTeacher.length == 0){
+        this.$notify({
+          type: 'warning',
+          message: '请先选择教师！'
+        });
+      }else if(this.selectTeacher.length == 1){
+        // 获取当前用户的权限  并展示在页面上
+        this.visibleAdmin=true;
+        this.titleAdmin='用户授权';
+        // 获取当前选中用户权限
+        this.teaadminOneR({user_id:this.selectTeacher[0]}); 
+      }else if(this.selectTeacher.length > 1){//不选老师不弹。
+        this.visibleAdmin=true;
+        this.titleAdmin='用户授权';
+        this.teaadminOneRAll();
+      }
+    },
+    submit2(formName){
+      var flag = 0;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.saveTch(this.form2).then((result)=>{
+            if(result.data.code == 200){
+              this.$notify({
+                title:'成功',
+                type: 'success',
+                message: '操作成功',
+              });
+              flag = 0;
+            }else if(result.data.code == 300){
+              this.$notify({
+                type: 'error',
+                message: '该帐号已经存在，请输入新帐号！',
+              });
+              flag = 1;
+            }else{
+              console.log('教师信息操作失败，后台返回状态码：'+result.data.code);
+              flag = 0;
+            }
+            if(flag == 0){
+              this.visible2=false;
+            }
+          }).catch((error)=>{
+            console.log('教师信息操作失败，后台报错！-->'+error);
+            flag = 0;
+            this.visible2=false;
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });  
+    },
+    submit2s(){
+    /*  this.$refs.upload.submit();
+      this.saveTch(this.form2).then((result)=>{
+        if(result.data.code == 200){
+          this.$message({
+            type: 'success',
+            message: '批量操作成功',
+          });
+        }else{
+          this.$message({
+            type: 'error',
+            message: '批量操作失败',
+          });
+        }
+      }).catch((error)=>{
+        this.$message({
+          type: 'error',
+          message: '批量操作失败'
+        });
+      });*/
+      $('#submit').trigger('click');
+      this.visible2s=false;
+      this.$notify({
+        title:'成功',
+        type: 'success',
+        message: '批量导入成功！'
+      });
+      // this.findAllTch();//刷新
+      //控制路由进行刷新
+      var vm = this;
+      setTimeout(function(){
+        vm.$router.push('/blank/loading');//加载页
+        setTimeout(function(){
+          vm.$router.push('/settings/users/teacher');
+        },100);
+      },100);
+    },
+    submitAdmin(){
+      // 获取所有的父级节点id,如果有子节点被选中,就将该父节点push进去数组
+      // 获取树形结构的id集合    拿到当前的Id   以及当前选中id的父级id
+      let authNodes = this.$refs.auth.getCheckedNodes(true);
+      let ch = [];
+      let pa = [];
+      // 获取子节点id集合
+      authNodes.forEach((item)=>{
+        ch.push(item.module_id);
+        if(item.module_upper_id !=0){
+          pa.push(item.module_upper_id);
+        }        
+      })
+      let arr = new Set(pa);
+      let arr2 = Array.from(arr).concat(ch);
+      // 获取父节点Id集合
+      var arr1 = this.selectTeacher;
+      var teach = dd(arr1);
+      var admin = dd(arr2);
+      var idsAdmin = teach + '#' + admin;
+      //拼接：
+      function dd(a){
+        var s = '';
+        for(var i=0;i<a.length;i++){
+          if(i == a.length-1){
+            s += a[i];
+          }else{
+            s += (a[i]+'@');
+          }
+        }
+        return s;
+      }
+      this.grantTch(idsAdmin).then((result)=>{
+        this.$notify({
+          title:'成功',
+          type: 'success',
+          message: '用户授权成功',
+        });
+      }).catch((error)=>{
+        console.log('用户授权失败，后台报错！-->'+error);
+      });
+      this.visibleAdmin=false;
+    },
+    cancle2(){this.visible2=false;},
+    cancle2s(){this.visible2s=false;},
+    cancleAdmin(){this.visibleAdmin=false;},
+    rowClass(row, index) {
+      return {"background-color":"#E6EBF5",'color':'#878D99'}
+    },
+    query(){
+      this.findTch(this.tch).then((result)=>{}).catch((error)=>{
+        console.log('教师信息查询失败，后台报错！-->'+error);
+      });
+    },
+    /*adminTeach2(bool,i) {//直接点击父权限
+      var arr = this.checkedTeacher2[i];
+      this.checkAll2[i] == bool;
+      if(bool==true){
+        for(var j=0;j<this.Teacher2[i].length;j++){
+          arr.push(this.Teacher2[i][j].module_id);
+        }
+      }else{
+        arr = [];
+      }
+      this.isIndeterminate2[i] = false;//只要点击父权限，则肯定不用checkbox的不确定状态。
+    },
+    dataTeacher2(value,i) {//点击某父权限下的子权限。
+      let len = value.length;
+      this.checkAll2[i] = len === this.Teacher2[i].length;
+      this.isIndeterminate2[i] = len > 0 && len < this.Teacher2[i].length;//介于0~length，开启不确定状态。
+    },*/
+   /* handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handleChange(file, fileList){
+      this.filename=file.name;
+    },
+    handlePreview(file) {
+      console.log(file);
+    },*/
+    ...mapActions(['findAllTch','saveTch','deleteByIdTch','findTch','queryTeach','grantTch','teaadminOneR','teaadminOneRAll']),
+  }
+}
+</script>
+
+<style scoped>
+  *{
+    font-size:12px;
+  }
+  .icon {
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .table{
+    overflow:auto;
+  }
+  .dialog .el-input{
+    width:86%;
+  }
+  .dialog-footer{
+    text-align:right;
+  }
+  a{
+    display:inline-block;
+    width:50px;
+  }
+  b{
+    display:inline-block;
+    width:50px;
+  }
+  .rowTop .el-form .el-form-item{
+    margin-top:-3px;
+    margin-bottom:11px;
+  }
+  .rowTop .but{
+    margin-right:0;
+    margin-left:8px;
+  }
+  .add{ margin-top:-2px;
+    background: #448db8;
+    border:none;
+  }
+  .search{
+    background: #448db8;
+    border:none;
+  }
+  .adds{
+     margin-top:-2px;
+    background: #448db8;
+    border:none;
+  }
+  .yes{
+    background: #448db8;
+    border:none;
+  }
+  .download{
+    border:none;
+    background: #448db8;
+    border-radius: 0;
+    margin-top: 2px;
+    margin-left: 3px;
+  }
+  .edit{
+     margin-top:-2px;
+    background: #448db8;
+    border:none;
+  }
+  .teacher i.options{
+  padding: 0 5px;
+  cursor: pointer;
+  color: #448db8;
+}
+
+</style>
+<style>
+   /*模态框样式*/
+  .dialog-title {
+    background-color: #448db8;
+    height: 52px;
+    line-height: 52px;
+    font-size: 18px;
+    color: #FFF;
+  }
+  .el-dialog__headerbtn i.el-dialog__close {
+    color: #FFF;
+  }
+  div.el-dialog__header {
+    padding: 0;
+  }
+  div.el-dialog--center .el-dialog__header {
+    padding-top: 0
+  }
+</style>
+

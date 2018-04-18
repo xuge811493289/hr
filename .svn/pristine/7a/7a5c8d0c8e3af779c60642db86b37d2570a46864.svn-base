@@ -1,0 +1,88 @@
+import axios from '../axios';
+import qs from 'querystring';
+import moment from 'moment';
+import $ from 'jquery';
+import cg from '../configure.js';
+var bp = cg.bp;
+
+export default {
+	state:{
+	//后台：
+		courseBegin:[],//课程类型
+		clazzBegin:[],//班级
+		gradeBegin:[],//年级
+		toolBegin:[],//工具箱
+		rateBegin:[],//班级心率数据
+	},
+	getters:{
+		gradeBegin:state => state.gradeBegin,
+		clazzBegin:state => state.clazzBegin,
+		toolBegin:state => state.toolBegin,
+		courseBegin:state => state.courseBegin,
+		rateBegin:state => state.rateBegin,
+	},
+	mutations:{
+		allClazzBegin:(state,val) => {//年级、课程。
+			state.gradeBegin = val[0];
+			state.courseBegin = val[1];
+		},
+		allClazzB:(state,val) => {//班级名称、id
+			state.clazzBegin = val;
+		},
+		allToolB:(state,val) => {//工具箱名称、id
+			state.toolBegin = val;
+		},
+		allRateCurveB:(state,val) => {//班级心率
+			state.rateBegin = val;
+		},
+	},
+	actions:{
+		//find:
+		findAllClazzBegin:(context) => {
+			axios.post(bp+'/Report/show_headInfo').then(({data})=>{
+				context.commit('allClazzBegin',data);
+			});
+		},
+		//queryKeys:
+		findClazzBegin:(context,form) => {
+			axios.post(bp+'/Report/show_headInfo',qs.stringify(form)).then(({data})=>{
+				context.commit('allClazzBegin',data);
+			});
+		},
+	//请求班级：
+		reqClazzBegin:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_class',qs.stringify(form)).then(({data})=>{
+					context.commit('allClazzB',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	//请求工具箱：
+		reqToolBegin:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_tools',qs.stringify(form)).then(({data})=>{
+					context.commit('allToolB',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	//reqClazzHeart:班级最高心率等
+		reqClazzHeartBegin:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_classStartHeartRate',qs.stringify(form)).then(({data})=>{
+					context.commit('allRateCurveB',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	},
+}
+
+

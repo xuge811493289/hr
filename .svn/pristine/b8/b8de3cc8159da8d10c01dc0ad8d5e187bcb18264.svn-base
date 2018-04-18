@@ -1,0 +1,198 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+import Home from '@/pages/home.vue'
+import Login from '@/pages/login.vue'
+
+import clazzBegin from '@/pages/clazzBegin/index'
+//import clazzHeartRateList from '@/pages/clazzBegin/clazzList'
+import clazzHeartRateCurves from '@/pages/clazzBegin/clazzRate'
+//import exceptionsSummary from '@/pages/clazzBegin/err'
+import remarksCourseContent from '@/pages/clazzBegin/remark'
+//import personalHeartRateCurves from '@/pages/clazzBegin/singleHeartRate'
+import bind from '@/pages/clazzBegin/bind'
+
+import clazzMonitor from '@/pages/clazzMonitor/index'
+//import clazzHeartRateList2 from '@/pages/clazzMonitor/clazzList'
+import clazzHeartRateCurves2 from '@/pages/clazzMonitor/clazzRate'
+//import exceptionsSummary2 from '@/pages/clazzMonitor/err'
+import remarksCourseContent2 from '@/pages/clazzMonitor/remark'
+//import personalHeartRateCurves2 from '@/pages/clazzMonitor/singleHeartRate'
+
+import reports from '@/pages/reports/index'
+import clazzReport from '@/pages/reports/data'
+import exceptionReport from '@/pages/reports/err'
+import clazzCurves from '@/pages/reports/curve'
+
+import settings from '@/pages/settings/index.vue'
+import users from '@/pages/settings/users'
+import teacher from '@/pages/settings/users/teacher'
+import student from '@/pages/settings/users/student'
+
+import unit from '@/pages/settings/units'
+import unitInfo from '@/pages/settings/units/unitInfo'
+import courseSetting from '@/pages/settings/units/courseSetting'
+import clazzSetting from '@/pages/settings/units/clazzSetting'
+import gradeSetting from '@/pages/settings/units/gradeSetting'
+import courseSection from '@/pages/settings/units/courseSection'
+
+import unitsClouds from '@/pages/settings/unitsClouds'
+import usersClouds from '@/pages/settings/usersClouds'
+
+import tools from '@/pages/settings/tools'
+import addTool from '@/pages/settings/tools/addTool'
+import circleList from '@/pages/settings/tools/circleList'
+
+import timeTable from '@/pages/settings/timeTable/timeTable'
+import heartSetting from '@/pages/settings/heartSetting/heartRate'
+
+import blank from '@/pages/blank/index';
+import loading from '@/pages/blank/loading';
+
+Vue.use(Router)
+
+export default new Router({
+  routes: [
+  	{
+  		path:'/login',//登录
+      component:Login,
+  	},{
+      path: '/',//主页
+      name: 'Home',
+      component: Home,
+      // 1-设置
+	    children:[{
+	    	path: 'blank',
+	    	name: 'blank',
+	    	component: blank,
+	    	children:[{
+	    		path: 'loading',
+		    	name: 'loading',
+		    	component: loading,
+	    	}],
+	    },{
+	      path: 'settings',
+	      name: 'settings',
+	      component: settings,
+	      //1-1 单位管理
+	      children:[{
+		      path: 'units',
+		      component: unit,
+		      children:[{
+		      	//1-1-1 单位信息
+		      	path:'unitInfo',
+		      	name:'unitInfo',
+		      	component:unitInfo,
+		      },{
+		      	//1-1-2 课程设置
+		      	path:'courseSetting',
+		      	name:'courseSetting',
+		      	component:courseSetting,
+		      },{
+		      	//1-1-3 班级设置
+		      	path:'clazzSetting',
+		      	name:'clazzSetting',
+		      	component:clazzSetting,
+		      },{
+		      	//1-1-4 年级设置
+		      	path:'gradeSetting',
+		      	name:'gradeSetting',
+		      	component:gradeSetting,
+		      },{
+		      	//1-1-5 上课节次
+		      	path:'courseSection',
+		      	name:'courseSection',
+		      	component:courseSection,
+		      }],
+		    },{
+		    	path: 'users',
+		    	name: 'users',
+		      component: users,
+		      children:[{
+		      	path:'teacher',
+		      	component:teacher,
+		      },{
+		      	path:'student',
+		      	component:student,
+		      }]
+		    },{
+		    	path: 'usersClouds',
+		      component: usersClouds,
+		    },{
+		    	path: 'unitsClouds',
+		      component: unitsClouds,
+		    },{
+		    	path: 'tools',
+		      component: tools,
+		      children:[{
+		      	path:'addTool',
+		      	component:addTool,
+		      },{
+		      	path:'circleList',
+		      	component:circleList,
+		      }]
+		    },{
+		    	path: 'timeTable',
+		      component: timeTable,
+		    },{
+		    	path: 'heartSetting',
+		      component: heartSetting,
+		    }],
+		  },{
+	    	path: 'clazzBegin',
+	      component: clazzBegin,
+	      children:[/*{
+	      	path:'clazzHeartRateList',
+	      	component:clazzHeartRateList,
+	      },*/{
+	      	path:'clazzHeartRateCurves',
+	      	component:clazzHeartRateCurves,
+	      },{
+	      	path:'remarksCourseContent',
+	      	component:remarksCourseContent,
+	      }/*,{
+	      	path:'exceptionsSummary',
+	      	component:exceptionsSummary,
+	      },{
+	      	path:'personalHeartRateCurves',
+	      	component:personalHeartRateCurves,
+	      }*/,{
+	      	path:'bind',
+	      	component:bind,
+	      }],
+	    },{
+	    	path: 'clazzMonitor',
+	      component: clazzMonitor,
+	      children:[/*{
+	      	path:'clazzHeartRateList',
+	      	component:clazzHeartRateList2,
+	      },*/{
+	      	path:'clazzHeartRateCurves',
+	      	component:clazzHeartRateCurves2,
+	      },/*{
+	      	path:'exceptionsSummary',
+	      	component:exceptionsSummary2,
+	      },*/{
+	      	path:'remarksCourseContent',
+	      	component:remarksCourseContent2,
+	      }/*,{
+	      	path:'personalHeartRateCurves',
+	      	component:personalHeartRateCurves2,
+	      }*/],
+	    },{
+	    	path: 'reports',
+	      component: reports,
+	      children:[{
+	      	path:'clazzReport',
+	      	component:clazzReport,
+	      },{
+	      	path:'exceptionReport',
+	      	component:exceptionReport,
+	      },{
+	      	path:'clazzCurves',
+	      	component:clazzCurves,
+	      }],
+	    }],
+    }
+  ]
+})
+

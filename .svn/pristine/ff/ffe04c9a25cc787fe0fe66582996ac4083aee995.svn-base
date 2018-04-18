@@ -1,0 +1,111 @@
+import axios from '../axios';
+import qs from 'querystring';
+import moment from 'moment';
+import cg from '../configure.js';
+var bp = cg.bp;
+
+export default {
+	state:{
+		gradeErr:[],
+		clazzErr:[],
+		courseErr:[],
+		tableErr:[],
+		errNum:{},
+		pagesErr:0,//分页
+		clazzOnLineErr:[],
+		hideErr:false,
+	},
+	getters:{
+		gradeErr:state => state.gradeErr,
+		clazzErr:state => state.clazzErr,
+		courseErr:state => state.courseErr,
+		tableErr:state => state.tableErr,
+		errNum:state => state.errNum,
+		pagesErr:state => state.pagesErr,
+		clazzOnLineErr:state => state.clazzOnLineErr,
+		hideErr:state => state.hideErr,
+	},
+	mutations:{
+		allErr:(state,val) => {
+			state.gradeErr = val[0];
+			state.courseErr = val[1];
+		},
+		allClazzErr:(state,val) => {
+			state.clazzErr = val;
+		},
+		allTableErr:(state,val) => {
+			val[1].forEach(function(item){
+				item.stu_gender == 1 ? item.stu_gender = '男' : item.stu_gender = '女';
+			});
+			state.pagesErr = (+val[0])*10;			
+			state.tableErr = val[1];
+			state.errNum.total = val[2].total;
+			state.errNum.stu_num = val[3].stu_num;
+			if(state.pagesErr < 10){
+				state.hideErr = true;
+			}
+		},
+		allClazzOnLineErr:(state,val) => {
+			state.clazzOnLineErr = val;
+		},
+	},
+	actions:{
+		//find:
+		findAllErr:(context) => {
+			axios.post(bp+'/report/show_headInfo').then(({data})=>{
+				context.commit('allErr',data);
+			});
+		},
+		//reqClazzErr:
+		reqClazzErr:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/show_class',qs.stringify(form)).then(({data})=>{
+					context.commit('allClazzErr',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+		//ClazzOnLineErr:
+		reqClazzOnLineErr:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/get_classOnline',qs.stringify(form)).then(({data})=>{
+					context.commit('allClazzOnLineErr',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+		//queryErr:查分页
+		queryErr:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/abnormal_report',qs.stringify(form)).then(({data})=>{
+					context.commit('allTableErr',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+		//reqTableErr:
+		reqTableErr:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/abnormal_report',qs.stringify(form)).then(({data})=>{
+					context.commit('allTableErr',data);
+					resolve(data);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	//下载异常报表：
+		downloadErrReport:(context) => {
+			axios.post(bp+'/report/download_errReport',qs.stringify({upload_abnormalReport
+:1})).then(()=>{});
+		},
+	}
+}
+
+

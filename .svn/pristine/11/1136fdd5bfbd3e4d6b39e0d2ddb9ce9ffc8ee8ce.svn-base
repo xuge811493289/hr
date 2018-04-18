@@ -1,0 +1,35 @@
+import axios from 'axios';
+import qs from 'querystring';
+import cg from '../configure.js';
+var bp = cg.bp;
+axios.defaults.headers.post['Content-type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
+export default {
+	state:{
+		remark:[],
+	},
+	getters:{
+		remark:state => state.remark,
+	},
+	mutations:{
+		allRemark:(state,val) => {
+			state.remark = val;
+		},
+	},
+	actions:{
+		//findAll:
+		findAllRemark:(context,form) => {
+			axios.post(bp+'/Report/show_remark',qs.stringify(form)).then(({data})=>{
+				context.commit('allRemark',data);
+			});
+		},
+		saveRemarkBegin:(context,form) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/Report/remarks_course',qs.stringify(form)).then((result)=>{
+					resolve(result);
+				});
+			}).catch((error)=>{
+				reject(error);
+			});
+		},
+	}
+}

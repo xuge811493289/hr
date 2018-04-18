@@ -1,0 +1,44 @@
+<!-- 用户设置 -->
+<template>
+	<div class="content">
+		<!-- 选项卡头部 -->
+		<div class="tbl-header">
+			<el-tabs v-model="activeName" type="card" @tab-click="tabClick">
+		    <el-tab-pane label="教师用户" name="teacher"></el-tab-pane>
+		    <el-tab-pane label="学生用户" name="student"></el-tab-pane>
+		  </el-tabs>
+		</div>
+		<!-- 选项卡体部 -->
+	  <div class="tbl-content">
+	  	<router-view></router-view>
+	  </div>
+	</div>
+</template>
+<script>
+import path from 'path';
+export default {
+ 	data(){
+		return {
+			name:'基础数据',
+      activeName:'teacher',
+		}
+	},
+	mounted(){//预加载。
+		this.$router.push({
+      path:path.join('/settings/users/','teacher'),
+    });
+	},
+  methods:{
+  	// 使用编程式路由处理选项卡切换
+    tabClick(tab, event) {
+      this.$router.push({
+        path:path.join('/settings/users/',tab.name),
+      });
+    }
+  }
+}
+</script>
+
+<style scoped>
+	
+</style>

@@ -1,0 +1,494 @@
+<template>
+	<div class="unitsClouds">
+		<div style="text-align:right;padding:0 0 5px 0">
+			<el-button type='info' 
+			 	style='background-color:#448db8;border:none' 
+			 	size='small' @click='addUnits'>新增</el-button>
+		</div>
+		<el-table :data="unitCloudTree" border max-height="400" size='mini' stripe>
+      <el-table-tree-column fixed :expandAll='false' file-icon="fa fa-file" folder-icon="fa fa-folder" label="单位名称" width="200">
+        <template slot-scope="scope">
+          <span>{{scope.row.name}}</span> 
+        </template>
+      </el-table-tree-column>
+      <el-table-column prop="level_name" label="级别" width='60' align='center'></el-table-column>
+      <el-table-column prop="unit_show_name" label="平台显示名称" width='180'></el-table-column>
+      <el-table-column prop="account" label="管理员账号" width='180'></el-table-column>
+      <el-table-column prop="user_prefix" label="单位账号前缀" width='180'></el-table-column>
+      <el-table-column prop="unit_status" label="状态" width='80' align='center'></el-table-column>
+      <el-table-column fixed="right" label="操作" width='120' align='center'>
+        <template slot-scope="scope">
+        	<i v-show="scope.row['level_id'] !== '4'" class="options fa fa-plus" @click="handleSave(scope.$index, scope.row)"></i>
+        	<i class="options fa fa-edit" @click="handleEdit(scope.$index, scope.row)"></i>
+        	<i class="options fa fa-trash" @click="handleDelete(scope.$index, scope.row)"></i>
+        </template>
+      </el-table-column>
+    </el-table>
+  
+    <!-- 点击两个新增和编辑弹框 -->
+    <el-dialog :visible.sync="visible2" center>
+      <div slot="title" class="dialog-title">
+        {{title2}}
+      </div>
+      <el-form :model="form2" :rules='rules' class='demo-ruleForm dialog' ref='form2' size="mini">
+        <el-form-item label="单位名称" :label-width="fw" prop='name'>
+          <el-input v-model="form2.unit_name" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <!-- 新增上级单位   可选上级 -->
+        <el-form-item v-show="title2 == '云平台单位信息添加'"  label="上级单位" :label-width="fw" prop='unit_id'>
+            <el-dropdown trigger="click" menu-align="start" size='mini' style="width:90%">
+              <span class="el-dropdown-link" style="min-width: 30%;">
+                <el-input v-model="UnitName" placeholder="请选择上级单位" size='mini'></el-input>
+              </span>
+              <el-dropdown-menu slot="dropdown" style="min-width: 32%;">
+                <el-tree 
+                  highlight-current
+                  lazy
+                  ref="unitTree"
+                  :filter-node-method="filterNode" 
+                  :data='unitCloudTreeData' 
+                  :props="defaultProps" 
+                  :load='unitCloudData' 
+                  @node-click="getunitCloudData"
+                  @current-change="currentChange"
+                  node-key="id">
+                </el-tree>
+              </el-dropdown-menu>
+            </el-dropdown>
+        </el-form-item>
+
+        <!-- 添加下属单位信息时展示 -->
+        <el-form-item v-show="title2 == '云平台下属单位信息添加'" label="上级单位" :label-width="fw" prop='unit_id'>
+          <el-input :disabled="true" v-model="UnitName" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+
+        <!-- 修改当前行的上级单位 -->
+        <el-form-item v-show="title2 == '云平台单位信息修改'" label="上级单位" :label-width="fw" prop='unit_id'>
+          <el-input :disabled="true" v-model="UnitName" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+
+        <!-- 新增单位时级别 -->
+        <el-form-item v-show="title2 == '云平台单位信息添加'" label="单位级别" :label-width="fw" prop='level_id'>
+          <el-select @focus="selectLevel('add')" v-model="form2.unit_level_id" placeholder="请选择单位级别" style="width:90%">
+            <el-option v-for="l in level" readonly :label="l.level_name" :key="l.level_id" :value="l.level_id"></el-option>
+          </el-select>
+        </el-form-item>
+
+        <!-- 新增下属单位时级别 -->
+        <el-form-item v-show="title2 == '云平台下属单位信息添加'" label="单位级别" :label-width="fw" prop='level_id'>
+          <el-select @focus="selectLevel('addDown')" v-model="form2.unit_level_id" placeholder="请选择单位级别" style="width:90%">
+            <el-option v-for="l in level" readonly :label="l.level_name" :key="l.level_id" :value="l.level_id"></el-option>
+          </el-select>
+        </el-form-item>
+        <!--修改单位时级别 -->
+        <el-form-item v-show="title2 == '云平台单位信息修改'" label="单位级别" :label-width="fw" prop='level_id'>
+          <el-input :disabled="true" readonly v-model="EditlevelName" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+
+        <el-form-item label="平台显示名称" :label-width="fw" prop='unit_show_name'>
+          <el-input v-model="form2.unit_show_name" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="单位管理员账号" :label-width="fw" prop='account'>
+          <el-input v-model="form2.user_account" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="单位管理员密码" :label-width="fw" prop='user_passwd'>
+          <el-input type='password' v-model="form2.user_passwd" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="单位账号前缀" :label-width="fw" prop='user_prefix'>
+          <el-input v-model="form2.user_prefix" auto-complete="off" style="width:90%"></el-input>
+        </el-form-item>
+        <el-form-item label="启用状态" :label-width="fw" prop='unit_status'>
+          <el-radio-group v-model="form2.unit_status">
+            <el-radio label="启用">启用</el-radio>
+            <el-radio label="禁用">禁用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="visible2 = false;" size="mini">取 消</el-button>
+        <el-button type="primary" @click="submit2('form2')" class="yes" size="mini">确 定</el-button>
+      </div>
+    </el-dialog>
+	</div>
+</template>
+<script>
+import { Loading } from 'element-ui';
+import {mapActions,mapGetters} from 'vuex';
+export default {
+  name: 'App',
+  data(){
+    return {
+      visible2:false,
+      level:{},
+      temp:{},
+      form2:{},
+      title2:'云平台单位设置',
+      fw:'130px',
+      li_head://表头：
+      `<li class="head">
+        <a>
+          <div class="divTd" style="width:17%">单位名称</div>
+          <div class="divTd" style="width:14%">级别</div>
+          <div class="divTd" style="width:17%">平台显示名称</div>
+          <div class="divTd" style="width:18%">管理员账号</div>
+          <div class="divTd" style="width:12%">单位账号前缀</div>
+          <div class="divTd" style="width:12%">状态</div>
+          <div class="divTd" style="width:10%">操作</div>
+        </a>
+      </li>`,
+      rules:{//表单非空验证:
+        unit_name:[
+          {required:true,message:'请输入单位名称',trigger: 'blur'},
+        ],
+        unit_level_id:[
+          {required:true,message:'请选择单位级别',trigger: 'change'},
+        ],
+        user_account:[
+          {required:true,message:'请输入管理员帐号',trigger:'blur'},
+        ],
+        user_passwd:[
+          {required:true,message:'请输入管理员密码',trigger:'blur'},
+        ],
+        user_prefix:[
+          {required:true,message:'请输入正确格式的单位账号前缀(只能以字母开头)',validator: this.CheckTel,trigger:'blur'},
+        ],
+        unit_status:[
+          {required:true,message:'请选择启用状态',trigger: 'change'},
+        ],
+      }, 
+      // 新增弹框中的树数据
+      defaultProps: {
+        children: 'children',
+        label: 'name'
+      },
+      //新增弹框中的树数据
+      unitCloudTreeData:[],
+      // 上级单位名称
+      UnitName:'',
+      EditlevelName:'',
+    }
+  },
+  created(){
+  	this.findAllUnitClouds();
+  },
+  computed:{
+    ...mapGetters([
+    	'unitCloud',
+    	'unitCloudUpper',
+    	'unitCloudLevel',
+    	'unitCloudTree'
+    ]),
+  },
+  methods:{
+    //不能为汉字：
+    CheckTel(rule, value, callback){
+      if(!value){
+          callback(new Error('必须输入用户名'))
+      }else{
+        var inputValue=new RegExp("^[a-zA-Z]*$", "").test(value);
+        if (!inputValue) {
+        //匹配失败，报错
+          callback(new Error('必须以字母开始'));
+        }else{
+          callback();
+        }
+      }
+    },
+    // 删除
+    handleDelete(index,row){
+      console.log(row);
+      let ids = {
+        id:row.id,
+        level_id:row.level_id,
+        prefix:row.user_prefix
+      }
+      this.delete2(ids);
+    },
+    delete2(ids){
+      this.$confirm('此操作将永久删除该条数据，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        var loading = Loading.service({ fullscreen: true,text:'正在更改，请稍后...' });
+        this.deleteByIdUnitClouds(ids).then((result)=>{
+          if(result.data.code == 200){
+            loading.close();
+            this.$notify({
+              title:'成功',
+              type: 'success',
+              message: '单位信息删除成功'
+            });
+          }else{
+            this.$notify({
+              type: 'error',
+              message: '单位信息删除失败'
+            });
+          }
+        }).catch((error)=>{
+          console.log('单位信息删除失败，后台报错！-->'+error);
+        });
+      }).catch(() => {
+        this.$notify({
+          type: 'error',
+          message: '单位信息删除失败'
+        });        
+      });
+    },
+    // 点击新增
+    addUnits(){
+      this.handlerunitCloudTree();
+      // 清空表单
+      this.UnitName = '';
+      this.title2 = '云平台单位信息添加';
+      this.visible2 = true;
+      this.form2 = {unit_status:'启用',unit_upper_id:'0'};
+    },
+    // 过滤树形结构
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.label.indexOf(value) !== -1;
+    },
+    //处理树数据
+    handlerunitCloudTree(){
+      // 一级数据
+      let level1 = [];
+      this.unitCloud.forEach((item)=>{
+        if(item.pid == 0){
+          level1.push({
+            level_id:item.level_id,
+            level_name:item.level_name,
+            id:item.id,
+            name:item.name,
+            children:[]
+          })
+        }
+      })
+      // 二级数据
+      this.unitCloud.forEach((item)=>{
+        level1.forEach((l)=>{
+          if(item.pid == l.id){
+            l.children.push({
+              level_id:item.level_id,
+              level_name:item.level_name,
+              id:item.id,
+              name:item.name,
+              pid:item.pid,
+              children:[]
+            })
+          }
+        })
+      })
+      this.unitCloudTreeData = level1;
+    },
+    // 加载节点
+    unitCloudData(node,resolve){
+      // 处理一级单位
+      if(node.level === 0){
+        resolve(this.unitCloudTreeData);
+      }
+      // 处理二级单位
+      if(node.level === 1){
+        resolve(node.data.children);
+      }
+      // 处理三级单位
+      if(node.level === 2){
+        let arr = [];
+        this.unitCloud.forEach((item)=>{
+          if(item.pid == node.data.id){
+            arr.push(item);
+          }
+        })
+        resolve(arr);
+      }
+      /*if(node.level ===3){
+        let arr = [];
+        this.unitCloud.forEach((item)=>{
+          if(item.pid == node.data.id){
+            arr.push(item);
+          }
+        })
+        resolve(arr);
+      }*/
+      if(node.level > 2){
+        resolve([]);
+      }
+    },
+    // 点击数获取节点
+    getunitCloudData(data){
+      this.temp = data;
+      this.UnitName = data.name;
+      this.form2.unit_upper_id = data.id;
+      this.level = [];
+    },
+    // 当前数据改变时树隐藏
+    currentChange(node){
+      let $unitTree = this.$refs['unitTree'];
+      if(node.type == 'type'){
+        if (!$unitTree) {
+          return false;
+        }
+      }
+      $unitTree.$parent.$parent.hide(2000);    
+    },
+    // 确认增加
+    submit2(formName){
+      var loading = Loading.service({ fullscreen: true,text:'正在更改，请稍后...' });
+      var flag = 0;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.saveUnitClouds(this.form2).then((result)=>{
+            if(result.data.code == 200){
+              loading.close();
+              this.$notify({
+                title:'成功',
+                type: 'success',
+                message: '操作成功'
+              });
+              flag = 0;
+            }else if(result.data.code == 300){
+              this.$notify({
+                type: 'warning',
+                message: '用户账号或前缀已存在，请重新输入'
+              });
+              flag = 1;
+            }else{
+              console.log('云单位操作失败，后台返回状态码：'+result.data.code);
+              flag = 0;
+            }
+            if(flag == 0){
+              this.visible2=false;
+            }
+          }).catch((error)=>{
+            console.log('云单位操作失败，后台报错！-->'+error);
+            flag = 0;
+            this.visible2=false;
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      }); 
+    },
+    // 根据单位选择单位级别
+    selectLevel(data){
+      // 新增
+      if(data =='add'){
+        // 判断上级单位是否为空  如果上级没有选项
+        if(this.UnitName == ''){
+          this.level = this.unitCloudLevel;
+        }else if(this.UnitName != ''){
+          // 获取上级单位的下级
+          let arr = [];
+          this.unitCloudLevel.forEach((item)=>{
+            // 当级单位的下面所有级别是可选的级别
+            if(this.temp.level_id < item.level_id){
+              arr.push(item);
+            }
+          })
+          this.level = arr;
+        }
+      }
+      // 如果是新增下级单位
+      else if(data == 'addDown'){}
+      // 编辑
+      else if(data == 'edit'){}      
+    },
+    // 新增下级单位
+    handleSave(index,row){
+      this.title2 = '云平台下属单位信息添加';
+      this.visible2 = true;
+      // 数据显示
+      this.form2 = {unit_status:'启用'};
+      this.UnitName = row.name;
+      this.form2.unit_upper_id = row.id;
+      // 筛选出所有可选的级别
+      let downUnit  = []
+      // 判断单位级别
+      this.unitCloudLevel.forEach((item)=>{
+        if(item.level_id > row.level_id){
+          downUnit.push(item);
+        }
+      })
+      this.level = downUnit;
+    },
+    // 修改
+    handleEdit(index,row){
+      // 判断当前学校是否为学校级别，如果是学校默认不能添加下属机关
+      this.visible2 = true;
+      this.title2 = '云平台单位信息修改';
+      this.form2 = {};
+      this.form2 = {
+        unit_status:row.unit_status,
+        unit_id:row.id,
+        unit_name:row.name,
+        unit_upper_id:row.pid,
+        unit_level_id:row.level_id,
+        unit_show_name:row.unit_show_name,
+        user_account:row.user_account,
+        user_prefix:row.user_prefix,
+        user_passwd:'      '
+      }; 
+      this.EditlevelName = row.level_name;
+      // 找出父级的名称   父级单位是不可修改的
+      if(row.pid == '0'){
+        this.UnitName = '';
+      }else{
+        this.unitCloud.forEach((item)=>{
+          if(item.id == row.pid){
+            this.UnitName = item.name;
+          }
+        })
+      }
+    },
+    // 数据映射
+    ...mapActions([
+    	'findAllUnitCloudsAsync',
+    	'findAllUnitClouds',
+    	'saveUnitClouds',
+    	'deleteByIdUnitClouds',
+    	'findUnitClouds'
+    ]),
+  }
+}
+</script>
+
+<style scoped>
+  .unitsClouds .el-table .cell{
+    text-align: left;
+  }
+  .unitsClouds .el-table .el-table__body .fa {
+  	color: #448db8;
+  }
+  .unitsClouds i.options{
+  	padding: 0 5px;
+  	cursor: pointer;
+  }
+.unitsClouds .el-button--primary {
+    color: #fff;
+    background-color: #448db8;
+    border-color: #448db8;
+}
+</style>
+<style>
+   /*模态框样式*/
+  .dialog-title {
+    background-color: #448db8;
+    height: 52px;
+    line-height: 52px;
+    font-size: 18px;
+    color: #FFF;
+  }
+  .el-dialog__headerbtn i.el-dialog__close {
+    color: #FFF;
+  }
+  div.el-dialog__header {
+    padding: 0;
+  }
+  div.el-dialog--center .el-dialog__header {
+    padding-top: 0
+  }
+  .dialog-footer{
+    text-align:right;
+  }
+</style>

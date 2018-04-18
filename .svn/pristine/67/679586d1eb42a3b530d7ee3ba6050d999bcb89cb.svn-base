@@ -1,0 +1,76 @@
+import axios from 'axios';
+import qs from 'querystring';
+var bp = 'http://10.0.7.46:8080/project/bracelet/Home';
+axios.defaults.headers.post['Content-type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
+
+export default {
+	state:{
+		unitCloud:[],//所有信息。
+		unitCloudUpper:[],//上级单位
+		unitCloudLevel:[],//单位级别
+	},
+	getters:{
+		unitCloud:state => state.unitCloud,
+		unitCloudUpper:state => state.unitCloudUpper,
+		unitCloudLevel:state => state.unitCloudLevel,
+	},
+	mutations:{
+		allUnitCloud:(state,val) => {
+			val[0].forEach(function(item,index){
+				item.unit_status == 1 ? item.unit_status = '启用' : item.unit_status = '停用';
+				item.pId = item.pid;
+			});
+			state.unitCloud = val[0];
+			state.unitCloudUpper = val[1];
+			state.unitCloudLevel = val[2];
+		}
+	},
+	actions:{
+		saveUnitClouds:(context,form) => {
+			return new Promise((resolve,reject)=>{
+			//add:
+				if(form.id==undefined){//如果id不存在，执行添加。
+					axios.post(bp+'/clouds/add_unit',qs.stringify(form)).then((result)=>{
+						context.dispatch('findAllUnitClouds');//刷新。
+						resolve(result);
+					}).catch((error)=>{
+						reject(error);
+					});
+			//update:
+				}else{  //否则执行修改。
+					axios.post(bp+'/clouds/update_unit',qs.stringify(form)).then((result)=>{
+						context.dispatch('findAllUnitClouds');//刷新。
+						resolve(result);
+					}).catch((error)=>{
+						reject(error);
+					});
+				}
+			});
+		},
+		//find:
+		findAllUnitClouds:(context) => {
+			axios.post(bp+'/clouds/get_unit').then(({data})=>{
+				context.commit('allUnitCloud',data);
+			});
+		},
+		//queryKeys:
+		findUnitClouds:(context,form) => {
+			axios.post(bp+'/clouds/show_unit',qs.stringify(form)).then(({data})=>{
+				context.commit('allUnitCloud',data);
+			});
+		},
+		//delete:
+		deleteByIdUnitClouds:(context,ids) => {
+			return new Promise((resolve,reject)=>{
+				axios.post(bp+'/clouds/delete_unit',qs.stringify(ids)).then((result)=>{
+					context.dispatch('findAllUnitClouds');//刷新。
+					resolve(result);
+				}).catch((error)=>{
+					reject(error);
+				});
+			});
+		},
+	}
+}
+
+
